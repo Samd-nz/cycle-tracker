@@ -15,25 +15,33 @@ function getMoonPhase(date = new Date()) {
   return             { name:"Waning Crescent", description:"Rest. Surrender. The cycle nears its beautiful completion.",                    svg:"waning-crescent" };
 }
 
-function MoonSVG({ phase, size = 72 }) {
-  const cx = size/2, cy = size/2, r = size/2-3;
-  const lit = "#F0E6C8", dark = "#0f0a1a";
-  const shapes = {
-    new: <circle cx={cx} cy={cy} r={r} fill={dark}/>,
-    "waxing-crescent": <><circle cx={cx} cy={cy} r={r} fill={lit}/><ellipse cx={cx-r*.12} cy={cy} rx={r*.88} ry={r} fill={dark}/></>,
-    "first-quarter":   <><circle cx={cx} cy={cy} r={r} fill={dark}/><path d={`M${cx},${cy-r} A${r},${r} 0 0,1 ${cx},${cy+r} L${cx},${cy-r}`} fill={lit}/></>,
-    "waxing-gibbous":  <><circle cx={cx} cy={cy} r={r} fill={lit}/><ellipse cx={cx-r*.15} cy={cy} rx={r*.6} ry={r} fill={dark}/></>,
-    full: <circle cx={cx} cy={cy} r={r} fill="url(#mg)"/>,
-    "waning-gibbous":  <><circle cx={cx} cy={cy} r={r} fill={lit}/><ellipse cx={cx+r*.15} cy={cy} rx={r*.6} ry={r} fill={dark}/></>,
-    "last-quarter":    <><circle cx={cx} cy={cy} r={r} fill={dark}/><path d={`M${cx},${cy-r} A${r},${r} 0 0,0 ${cx},${cy+r} L${cx},${cy-r}`} fill={lit}/></>,
-    "waning-crescent": <><circle cx={cx} cy={cy} r={r} fill={lit}/><ellipse cx={cx+r*.12} cy={cy} rx={r*.88} ry={r} fill={dark}/></>,
-  };
+// NASA LRO (Lunar Reconnaissance Orbiter) moon phase images — public domain
+const NASA_MOON_IMAGES = {
+  "new":             "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_new.1933_print.jpg",
+  "waxing-crescent": "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_waxing_crescent.2028_print.jpg",
+  "first-quarter":   "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_first_quarter.2091_print.jpg",
+  "waxing-gibbous":  "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_waxing_gibbous.2158_print.jpg",
+  "full":            "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_full.1571_print.jpg",
+  "waning-gibbous":  "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_waning_gibbous.2403_print.jpg",
+  "last-quarter":    "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_third_quarter.1755_print.jpg",
+  "waning-crescent": "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005048/phase_waning_crescent.1810_print.jpg",
+};
+
+function MoonImage({ phase, size = 90 }) {
+  const src = NASA_MOON_IMAGES[phase] || NASA_MOON_IMAGES["full"];
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{filter:`drop-shadow(0 0 ${size*.18}px #F0E6C866)`}}>
-      <defs><radialGradient id="mg" cx="38%" cy="33%"><stop offset="0%" stopColor="#FFF8E7"/><stop offset="55%" stopColor="#F0E6C8"/><stop offset="100%" stopColor="#C8B890"/></radialGradient></defs>
-      {shapes[phase]||shapes.full}
-      <circle cx={cx} cy={cy} r={r+2} fill="none" stroke="#F0E6C8" strokeWidth="0.4" opacity="0.15"/>
-    </svg>
+    <div style={{
+      width: size, height: size, borderRadius: "50%", overflow: "hidden",
+      boxShadow: `0 0 ${size * 0.3}px #F0E6C844, 0 0 ${size * 0.6}px #F0E6C811`,
+      flexShrink: 0,
+    }}>
+      <img
+        src={src}
+        alt={phase}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        onError={e => { e.target.style.display = "none"; }}
+      />
+    </div>
   );
 }
 
@@ -50,12 +58,12 @@ const EVENT_MAP = Object.fromEntries(EVENT_TYPES.map(e=>[e.key,e]));
 
 // ─── DAY GUIDE ────────────────────────────────────────────────────────────────
 const DAY_GUIDE = {
-  1:  {title:"The Bleeding Begins",   note:"Your body releases what it no longer needs. Allow yourself to be still — this is sacred shedding, not something to push through.", energy:"Very low — rest is required",    mood:"Introspective, tender, possibly emotional", body:"Cramping may be strongest today. Heat and warmth.",        ritual:"Hot water bottle, dark chocolate, a slow morning"},
-  2:  {title:"Deep Rest",             note:"Flow is often heaviest now. Your body is working hard beneath the surface. Cancel what you can and honour the quiet.",             energy:"Low — conserve everything",         mood:"Withdrawn, sensitive, raw",                body:"Heavy flow, possible back pain and deep fatigue",          ritual:"Epsom salt bath, iron-rich foods, no obligations"},
-  3:  {title:"The Turning",           note:"The sharpest discomfort often eases around day three. A subtle shift — still slow, but the worst may be behind you.",             energy:"Low but slightly steadier",          mood:"Quieter, more accepting",                  body:"Flow beginning to ease, cramping reducing",                ritual:"Gentle stretching, ginger tea, journalling"},
-  4:  {title:"Soft Emergence",        note:"A thread of energy begins to return. You may feel more like yourself — but don't rush. Let the return be gentle.",                energy:"Slowly returning",                  mood:"Clearer, more present",                    body:"Lighter flow, body feels less heavy",                      ritual:"Short walk, nourishing warm food, early sleep"},
-  5:  {title:"Closing the Gate",      note:"The menstrual phase draws to a close. Notice what clarity has emerged from the stillness of these days.",                          energy:"Moderate — beginning to rebuild",    mood:"Reflective, ready for more",               body:"Flow ending or very light",                                ritual:"Set one small intention for the week ahead"},
-  6:  {title:"First Light",           note:"Oestrogen begins its gentle rise. The heaviness lifts. You may wake feeling lighter — almost surprised by it.",                    energy:"Building steadily",                 mood:"Optimistic, curious",                      body:"Body feels lighter, skin begins to clear",                 ritual:"Try something new — a recipe, a walk, a podcast"},
+  1:  {title:"First Light",           note:"Your bleeding has ended and a new cycle begins. Oestrogen starts its gentle rise. The heaviness lifts — you may feel lighter than you have in days.", energy:"Building steadily",          mood:"Optimistic, emerging, curious",            body:"Body feels lighter, skin begins to clear",                 ritual:"Try something new — a recipe, a walk, a podcast"},
+  2:  {title:"The Rising",            note:"Creative energy and motivation return. Your mind feels clearer. A wonderful day to begin something you've been putting off.",       energy:"Good and building",                 mood:"Motivated, clear-headed",                  body:"Energy increasing, digestion often improves",              ritual:"Start a new project or revisit an old goal"},
+  3:  {title:"Opening Up",            note:"Social energy returns. You may feel more talkative, warmer, more willing to reach out. Lean into connection.",                     energy:"Strong",                            mood:"Warm, sociable, expressive",               body:"Skin glowing, body feels capable",                         ritual:"Call a friend, make a plan, say yes to something"},
+  4:  {title:"Sharpening",            note:"Focus and cognitive clarity are heightened. Your brain is genuinely running differently — use it for anything requiring deep thought.", energy:"High and focused",              mood:"Confident, articulate",                    body:"Strong, capable, well-rested",                             ritual:"Tackle the hard task, write, strategise"},
+  5:  {title:"Full Bloom",            note:"Energy, mood and confidence are all rising together. Notice how different this feels from the days of bleeding.",                   energy:"Excellent",                         mood:"Positive, self-assured",                   body:"Peak physical readiness building",                         ritual:"Exercise, create, connect — you're thriving"},
+  6:  {title:"Creative Fire",         note:"Oestrogen boosts dopamine. Ideas flow easily today. This is a wonderful day for creative work of any kind.",                       energy:"High and inspired",                 mood:"Playful, imaginative",                     body:"Body responds well to movement and challenge",             ritual:"Make art, cook something beautiful, move your body"},
   7:  {title:"The Rising",            note:"Creative energy and motivation return. Your mind feels sharper. A wonderful day to begin something you've been putting off.",      energy:"Good and building",                 mood:"Motivated, clear-headed",                  body:"Energy increasing, digestion often improves",              ritual:"Start a new project or revisit an old goal"},
   8:  {title:"Opening Up",            note:"Social energy returns. You may feel more talkative, warmer, more willing to reach out. Lean into connection.",                     energy:"Strong",                            mood:"Warm, sociable, expressive",               body:"Skin glowing, body feels capable",                         ritual:"Call a friend, make a plan, say yes to something"},
   9:  {title:"Sharpening",            note:"Focus and cognitive clarity are heightened. Your brain is genuinely running differently — use it for anything requiring deep thought.", energy:"High and focused",              mood:"Confident, articulate",                    body:"Strong, capable, well-rested",                             ritual:"Tackle the hard task, write, strategise"},
@@ -85,7 +93,7 @@ const PHASES = {
   menstrual: {
     name:"Menstrual", days:"Days 1–5", emoji:"🌑", tagline:"The dark moon within",
     color:"#E8A0B0", bg:"#150E18", cardBg:"#1E1424", textColor:"#F8EEF2", mutedColor:"#C8B0BC",
-    description:"Your body sheds what it no longer needs. Oestrogen and progesterone are at their lowest. A time of deep rest, inward wisdom and sacred release.",
+    description:"Your body sheds what it no longer needs. Oestrogen and progesterone are at their lowest. This phase ends when bleeding stops — that's when your new cycle begins. A time of deep rest, inward wisdom and sacred release.",
     symptoms:["Cramping & lower back pain","Deep fatigue","Bloating & heaviness","Headaches from hormone drop","Deep introspection","Heightened emotional sensitivity"],
     foods:[{item:"Dark leafy greens — spinach, kale",reason:"Replenish iron lost through bleeding"},{item:"Red meat, lentils & beans",reason:"Iron-rich foods prevent anaemia and fatigue"},{item:"Dark chocolate 70%+",reason:"Magnesium eases cramps and genuinely lifts mood"},{item:"Oily fish — salmon, sardines",reason:"Omega-3s reduce the prostaglandins that cause cramping"},{item:"Warming soups & broths",reason:"Easy to digest, comforting and deeply hydrating"},{item:"Ginger & turmeric tea",reason:"Anti-inflammatory — reduces cramping severity"}],
     supplements:[{item:"Magnesium glycinate 300–400mg",reason:"Reduces cramps, bloating and improves sleep quality"},{item:"Omega-3 / fish oil",reason:"Reduces prostaglandins that drive cramping pain"},{item:"Iron + Vitamin C",reason:"Replenish iron lost — Vit C doubles absorption"},{item:"Vitamin B1 (Thiamine)",reason:"Clinical studies show significant reduction in period pain"}],
@@ -94,7 +102,7 @@ const PHASES = {
   follicular: {
     name:"Follicular", days:"Days 6–13", emoji:"🌒", tagline:"Seeds stir beneath the soil",
     color:"#90D0A8", bg:"#0E1612", cardBg:"#141E18", textColor:"#EEF8F2", mutedColor:"#A8C8B4",
-    description:"Oestrogen rises as follicles develop. Energy, mood and creativity return. Your mind is sharp and your body capable. The world opens again.",
+    description:"Bleeding has ended and your cycle begins here. Oestrogen rises as follicles develop. Energy, mood and creativity return. Your mind is sharp and your body capable. The world opens again.",
     symptoms:["Rising energy and motivation","Improved mood and optimism","Sharper focus and thinking","Greater desire to socialise","Skin clearing and brightening","Physical stamina increasing"],
     foods:[{item:"Eggs & quality protein",reason:"Support follicle development and sustained energy"},{item:"Fermented foods — yoghurt, kefir, kimchi",reason:"Gut health regulates oestrogen metabolism"},{item:"Broccoli & cruciferous vegetables",reason:"Support liver clearance of used oestrogen"},{item:"Flaxseeds & pumpkin seeds",reason:"Phytoestrogens gently support rising oestrogen"},{item:"Berries & citrus",reason:"Antioxidants protect developing follicles"},{item:"Whole grains — oats, quinoa",reason:"Steady energy as vitality builds"}],
     supplements:[{item:"Vitamin D3 1000–2000 IU",reason:"Supports follicle development, hormone signalling and mood"},{item:"B-vitamin complex (esp. B6)",reason:"Energy metabolism and mood neurotransmitter production"},{item:"Zinc 15–25mg",reason:"Supports follicular development and skin clarity"},{item:"Probiotic",reason:"Gut bacteria that regulate oestrogen levels"}],
@@ -232,7 +240,10 @@ export default function App() {
   useEffect(()=>{ try{localStorage.setItem("ct_ev4",JSON.stringify(events))}catch{} },[events]);
 
   // ── Derived ──
+  // Cycle day 1 = day after last period_end (or first period_start if no end logged)
   const cycleStartDate = (() => {
+    const ends = events.filter(e=>e.type==="period_end").sort((a,b)=>b.date.localeCompare(a.date));
+    if(ends.length) return addDays(ends[0].date, 1); // day after bleeding ends
     const starts = events.filter(e=>e.type==="period_start").sort((a,b)=>b.date.localeCompare(a.date));
     return starts.length ? starts[0].date : null;
   })();
@@ -454,7 +465,7 @@ export default function App() {
                 {/* Moon + Day */}
                 <div style={{...card(),display:"flex",gap:16,alignItems:"flex-start"}}>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,minWidth:78}}>
-                    <MoonSVG phase={moon.svg} size={68}/>
+                    <MoonImage phase={moon.svg} size={90}/>
                     <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:T.color,textAlign:"center",opacity:.85,lineHeight:1.4}}>{moon.name}</p>
                   </div>
                   <div style={{flex:1}}>
