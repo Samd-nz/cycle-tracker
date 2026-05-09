@@ -257,24 +257,6 @@ export default function App() {
                 </div>
               ):(<>
 
-                {/* ── QUICK LOG ─────────────────────────────────────────── */}
-                <div style={card()}>
-                  <span style={sl}>Record today</span>
-                  <div style={{position:"relative",marginBottom:10}}>
-                    <select value={selectedType} onChange={e=>setSelectedType(e.target.value)} style={selectStyle()}>
-                      {EVENT_TYPES.map(et=>(
-                        <option key={et.key} value={et.key}>{et.emoji} {et.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {/* Preview of selected */}
-                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,marginBottom:12,lineHeight:1.5,paddingLeft:2}}>
-                    {EVENT_MAP[selectedType]?.note}
-                  </p>
-                  <button onClick={addQuickLog} style={{width:"100%",padding:"11px",borderRadius:100,border:"none",background:T.color,color:T.bg,fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2.5,textTransform:"uppercase",cursor:"pointer"}}>
-                    ✦ Add for today
-                  </button>
-                </div>
 
                 {/* ── MOON + DAY ────────────────────────────────────────── */}
                 <div style={{...card(),display:"flex",gap:16,alignItems:"flex-start"}}>
