@@ -276,43 +276,41 @@ export default function App() {
   const pbtn = (c=T.color,bg=T.bg) => ({padding:"11px",borderRadius:100,border:"none",background:c,color:bg,fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",width:"100%"});
   const sbtn = (c=T.color) => ({padding:"10px",borderRadius:100,border:`1px solid ${c}44`,background:"transparent",color:c,fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",width:"100%"});
 
-  // ── Add Entry Form (shared between Journal tab) ─────────────────────────────
-  function AddEntryForm() {
-    return (
-      <div style={card()}>
-        <span style={sl}>Add an entry</span>
+  // Add entry form rendered inline (not as a nested component) to preserve focus
+  const addEntryForm = (
+    <div style={card()}>
+      <span style={sl}>Add an entry</span>
 
-        {/* Type */}
-        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Event type</p>
-        <select value={addType} onChange={e=>setAddType(e.target.value)} style={{...sel(),marginBottom:6}}>
-          {EVENT_TYPES.map(et=><option key={et.key} value={et.key}>{et.emoji} {et.label}</option>)}
-        </select>
-        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,lineHeight:1.5,marginBottom:14,paddingLeft:2}}>{EVENT_MAP[addType]?.note}</p>
+      {/* Type */}
+      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Event type</p>
+      <select value={addType} onChange={e=>setAddType(e.target.value)} style={{...sel(),marginBottom:6}}>
+        {EVENT_TYPES.map(et=><option key={et.key} value={et.key}>{et.emoji} {et.label}</option>)}
+      </select>
+      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,lineHeight:1.5,marginBottom:14,paddingLeft:2}}>{EVENT_MAP[addType]?.note}</p>
 
-        {/* Notes */}
-        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Notes (optional)</p>
-        <textarea value={addNote} onChange={e=>setAddNote(e.target.value)} placeholder="How are you feeling? Any observations…" rows={3}
-          style={{...inp(),resize:"none",lineHeight:1.6,marginBottom:14}} />
+      {/* Notes */}
+      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Notes (optional)</p>
+      <textarea value={addNote} onChange={e=>setAddNote(e.target.value)} placeholder="How are you feeling? Any observations…" rows={3}
+        style={{...inp(),resize:"none",lineHeight:1.6,marginBottom:14}} />
 
-        {/* Other day toggle */}
-        {addOtherDay && (
-          <div style={{marginBottom:14}}>
-            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Date</p>
-            <input type="date" value={addDate} onChange={e=>setAddDate(e.target.value)} style={inp()} />
-          </div>
-        )}
-
-        {/* Buttons */}
-        <div style={{display:"flex",gap:8,marginTop:4}}>
-          <button onClick={addEntry} style={{...pbtn(),flex:1}}>✦ Add for today</button>
-          <button onClick={()=>setAddOtherDay(p=>!p)} style={{...sbtn(),flex:1}}>{addOtherDay?"Cancel":"Other day"}</button>
+      {/* Other day toggle */}
+      {addOtherDay && (
+        <div style={{marginBottom:14}}>
+          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Date</p>
+          <input type="date" value={addDate} onChange={e=>setAddDate(e.target.value)} style={inp()} />
         </div>
-        {addOtherDay && (
-          <button onClick={addEntry} style={{...pbtn(),marginTop:8}}>✦ Add for {fmtShort(addDate)}</button>
-        )}
+      )}
+
+      {/* Buttons */}
+      <div style={{display:"flex",gap:8,marginTop:4}}>
+        <button onClick={addEntry} style={{...pbtn(),flex:1}}>✦ Add for today</button>
+        <button onClick={()=>setAddOtherDay(p=>!p)} style={{...sbtn(),flex:1}}>{addOtherDay?"Cancel":"Other day"}</button>
       </div>
-    );
-  }
+      {addOtherDay && (
+        <button onClick={addEntry} style={{...pbtn(),marginTop:8}}>✦ Add for {fmtShort(addDate)}</button>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -462,7 +460,7 @@ export default function App() {
           {view==="log"&&(
             <div style={{padding:"18px 20px 100px"}} className="fi">
 
-              <AddEntryForm/>
+              {addEntryForm}
 
               {/* Grouped cycles */}
               {cycleGroups.length===0?(
