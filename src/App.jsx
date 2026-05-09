@@ -178,6 +178,8 @@ const STARS = Array.from({length:45},(_,i)=>({x:(i*137.5)%100,y:(i*97.3)%100,s:(
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [events, setEvents]         = useState(()=>{ try{return JSON.parse(localStorage.getItem("ct_ev4")||"[]")}catch{return[]} });
+  const [loading, setLoading]       = useState(true);
+  const [syncError, setSyncError]   = useState(false);
   const [view, setView]             = useState("home");
   const [activePhase, setActivePhase] = useState(null);
   const [phaseTab, setPhaseTab]     = useState("care");
@@ -200,8 +202,33 @@ export default function App() {
   const [showUnexpected, setShowUnexpected] = useState(false);
 
   // Stats date range
-  const [statsRange, setStatsRange] = useState("all"); // "all" | "6m" | "1y"
+  const [statsRange, setStatsRange] = useState("all");
 
+  // Load from Supabase on mount, fall back to localStorage cache
+  useEffect(()=>{
+    async function load() {
+      try {
+        const { supabase } = await import("./supabase.js");
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .order("date", { ascending: true });
+        if(error) throw error;
+        const loaded = data.map(r=>({ id:r.id, type:r.type, date:r.date, note:r.note||null }));
+        setEvents(loaded);
+        localStorage.setItem("ct_ev4", JSON.stringify(loaded));
+        setSyncError(false);
+      } catch(e) {
+        console.error("Supabase load error:", e);
+        setSyncError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  // Keep localStorage as a fast local cache
   useEffect(()=>{ try{localStorage.setItem("ct_ev4",JSON.stringify(events))}catch{} },[events]);
 
   // ── Derived ──
@@ -253,20 +280,66 @@ export default function App() {
   });
 
   // ── Actions ──
-  function addEntry() {
+  async function addEntry() {
     const date = addOtherDay ? addDate : todayStr();
-    const ev = { id:Date.now(), type:addType, date, note:addNote.trim()||null };
-    setEvents(p=>[...p,ev]);
+    const note = addNote.trim()||null;
+    // Optimistic update
+    const tempId = Date.now();
+    const optimistic = { id:tempId, type:addType, date, note };
+    setEvents(p=>[...p, optimistic]);
     setAddNote(""); setAddOtherDay(false); setAddDate(todayStr());
+    try {
+      const { supabase } = await import("./supabase.js");
+      const { data, error } = await supabase
+        .from("events")
+        .insert([{ type:addType, date, note }])
+        .select()
+        .single();
+      if(error) throw error;
+      // Replace temp with real Supabase row (has real id)
+      setEvents(p=>p.map(e=>e.id===tempId ? { id:data.id, type:data.type, date:data.date, note:data.note||null } : e));
+    } catch(e) {
+      console.error("Supabase insert error:", e);
+      setSyncError(true);
+    }
   }
 
-  function deleteEvent(id) { if(window.confirm("Remove this entry?")) setEvents(p=>p.filter(e=>e.id!==id)); }
+  async function deleteEvent(id) {
+    if(!window.confirm("Remove this entry?")) return;
+    setEvents(p=>p.filter(e=>e.id!==id));
+    try {
+      const { supabase } = await import("./supabase.js");
+      const { error } = await supabase.from("events").delete().eq("id", id);
+      if(error) throw error;
+    } catch(e) {
+      console.error("Supabase delete error:", e);
+      setSyncError(true);
+    }
+  }
 
   function startEdit(ev) { setEditingId(ev.id); setEditDate(ev.date); setEditType(ev.type); setEditNote(ev.note||""); }
-  function saveEdit()    { setEvents(p=>p.map(e=>e.id===editingId?{...e,date:editDate,type:editType,note:editNote.trim()||null}:e)); setEditingId(null); }
-  function cancelEdit()  { setEditingId(null); }
+
+  async function saveEdit() {
+    const note = editNote.trim()||null;
+    setEvents(p=>p.map(e=>e.id===editingId?{...e,date:editDate,type:editType,note}:e));
+    setEditingId(null);
+    try {
+      const { supabase } = await import("./supabase.js");
+      const { error } = await supabase
+        .from("events")
+        .update({ type:editType, date:editDate, note })
+        .eq("id", editingId);
+      if(error) throw error;
+    } catch(e) {
+      console.error("Supabase update error:", e);
+      setSyncError(true);
+    }
+  }
+
+  function cancelEdit() { setEditingId(null); }
 
   function toggleGroup(key) { setOpenGroups(p=>({...p,[key]:!p[key]})); }
+
 
   // ── Style helpers ──────────────────────────────────────────────────────────
   const card = (extra={}) => ({background:T.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${T.color}28`,...extra});
@@ -331,6 +404,22 @@ export default function App() {
         <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
           {STARS.map((s,i)=><div key={i} style={{position:"absolute",left:`${s.x}%`,top:`${s.y}%`,width:s.s,height:s.s,borderRadius:"50%",background:"#F0E6C8",opacity:s.o}}/>)}
         </div>
+
+        {/* Loading overlay */}
+        {loading&&(
+          <div style={{position:"fixed",inset:0,background:T.bg,zIndex:100,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+            <div className="pulse" style={{fontSize:48}}>🌑</div>
+            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:3,textTransform:"uppercase",color:T.color,opacity:.8}}>Loading your cycle…</p>
+          </div>
+        )}
+
+        {/* Sync error banner */}
+        {syncError&&!loading&&(
+          <div style={{background:"#E0A06022",borderBottom:"1px solid #E0A06044",padding:"10px 22px",display:"flex",alignItems:"center",gap:10,position:"relative",zIndex:2}}>
+            <span style={{fontSize:14}}>⚠️</span>
+            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:"#E0A060",lineHeight:1.5}}>Showing cached data — changes may not be saved. Check your connection.</p>
+          </div>
+        )}
 
         {/* Header */}
         <div style={{position:"relative",zIndex:1,padding:"30px 22px 14px",borderBottom:`1px solid ${T.color}28`}}>
