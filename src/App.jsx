@@ -136,7 +136,12 @@ const AGE_INFO = {
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const AVG_CYCLE = 28;
-function getPhaseKey(d) { if(d<=5)return"menstrual"; if(d<=13)return"follicular"; if(d<=16)return"ovulatory"; return"luteal"; }
+// Cycle day 1 = first day after period_end.
+// Days 1–8:   Follicular
+// Days 9–11:  Ovulatory
+// Day 12+:    Luteal (open-ended — ends when next period_start is logged)
+// Menstrual:  Driven by active period_start/end events, not day number.
+function getPhaseKey(d) { if(d<=8)return"follicular"; if(d<=11)return"ovulatory"; return"luteal"; }
 function todayStr() { return new Date().toISOString().slice(0,10); }
 function fmtFull(str) { return new Date(str+"T12:00:00").toLocaleDateString("en-NZ",{weekday:"short",day:"numeric",month:"short",year:"numeric"}); }
 function fmtShort(str) { if(!str)return""; return new Date(str+"T12:00:00").toLocaleDateString("en-NZ",{day:"numeric",month:"short",year:"numeric"}); }
@@ -145,10 +150,12 @@ function daysBetween(a,b) { return Math.round((new Date(b+"T12:00:00")-new Date(
 function addDays(str,n) { const d=new Date(str+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 
 // ─── GROUP EVENTS INTO CYCLES ─────────────────────────────────────────────────
-// A group starts on the day after the previous period_end (or the first period_start ever)
-// and ends on the next period_end.
+// Each cycle group:
+//   Starts: the period_start date (first day of bleeding)
+//   Ends:   day before the next period_start (or today for current cycle)
+//   Cycle length: period_start → day before next period_start
+//   Days bleeding: period_start → period_end
 function buildCycleGroups(events) {
-  // Get all period_start and period_end events sorted ascending
   const starts = events.filter(e=>e.type==="period_start").map(e=>e.date).sort();
   const ends   = events.filter(e=>e.type==="period_end").map(e=>e.date).sort();
 
@@ -157,19 +164,24 @@ function buildCycleGroups(events) {
   const groups = [];
   for(let i=0;i<starts.length;i++){
     const cycleStart = starts[i];
-    // Next start is the start of the following cycle
-    const nextStart = starts[i+1]||null;
-    // period_end within this cycle window
+    const nextStart  = starts[i+1]||null;
+
+    // period_end belonging to this cycle (between this start and next start)
     const periodEnd = ends.find(e=>e>=cycleStart && (!nextStart||e<nextStart))||null;
-    // Group ends day before next period_start, or today if it's the current cycle
+
+    // Group spans: period_start → day before next period_start (or today)
     const groupEnd = nextStart ? addDays(nextStart,-1) : todayStr();
 
-    // Cycle length = day before next period_start minus cycleStart + 1
+    // Cycle length = full span from this period_start to day before next period_start
     const cycleLength = nextStart ? daysBetween(cycleStart, addDays(nextStart,-1)) : null;
+
     // Days bleeding = period_start to period_end inclusive
     const daysBleeding = periodEnd ? daysBetween(cycleStart, periodEnd) : null;
 
-    // All events within this group's window
+    // Follicular day 1 = day after period_end
+    const follicularStart = periodEnd ? addDays(periodEnd, 1) : null;
+
+    // All events within this group
     const groupEvents = events
       .filter(e=>e.date>=cycleStart && e.date<=groupEnd)
       .sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
@@ -241,23 +253,57 @@ export default function App() {
 
   // ── Derived ──
   // Cycle day 1 = day after last period_end (or first period_start if no end logged)
-  const cycleStartDate = (() => {
-    const ends = events.filter(e=>e.type==="period_end").sort((a,b)=>b.date.localeCompare(a.date));
-    if(ends.length) return addDays(ends[0].date, 1); // day after bleeding ends
-    const starts = events.filter(e=>e.type==="period_start").sort((a,b)=>b.date.localeCompare(a.date));
-    return starts.length ? starts[0].date : null;
+  // ── Phase & cycle day logic ─────────────────────────────────────────────────
+  // Menstrual  = period_start logged with no period_end yet, or today is between start & end
+  // Follicular = Day 1–8  after period_end
+  // Ovulatory  = Day 9–11 after period_end
+  // Luteal     = Day 12+  until the next period_start is logged (flexible length)
+
+  const today = todayStr();
+
+  // Most recent period_start
+  const lastStart = (() => {
+    const s = events.filter(e=>e.type==="period_start").sort((a,b)=>b.date.localeCompare(a.date));
+    return s.length ? s[0].date : null;
   })();
+
+  // Most recent period_end that comes after lastStart
+  const lastEnd = (() => {
+    if(!lastStart) return null;
+    const e = events.filter(e=>e.type==="period_end" && e.date >= lastStart).sort((a,b)=>b.date.localeCompare(a.date));
+    return e.length ? e[0].date : null;
+  })();
+
+  // Is today an active bleeding day?
+  const isActiveBleeding = (() => {
+    if(!lastStart || lastStart > today) return false;
+    if(!lastEnd) return true;           // started, no end logged yet
+    return today <= lastEnd;            // today within start→end window
+  })();
+
+  // Cycle day 1 = day after period_end (follicular begins)
+  // If no period_end logged yet, no cycle day to show
+  const cycleStartDate = lastEnd ? addDays(lastEnd, 1) : null;
+
   const doc = (() => {
     if(!cycleStartDate) return null;
-    const s=new Date(cycleStartDate+"T12:00:00"),t=new Date(); t.setHours(12,0,0,0);
-    const diff=Math.floor((t-s)/86400000)+1;
-    return diff>0?((diff-1)%AVG_CYCLE)+1:null;
+    const s=new Date(cycleStartDate+"T12:00:00"), t=new Date();
+    t.setHours(12,0,0,0);
+    const diff = Math.floor((t-s)/86400000)+1;
+    return diff > 0 ? diff : null; // no modulo — cycle length is open-ended
   })();
-  const curKey = doc ? getPhaseKey(doc) : null;
-  const cur    = curKey ? PHASES[curKey] : null;
-  const guide  = doc ? DAY_GUIDE[Math.min(doc,28)] : null;
+
+  // Phase: menstrual overrides everything during active bleeding
+  const curKey = (() => {
+    if(isActiveBleeding) return "menstrual";
+    if(!doc) return lastStart ? "luteal" : null; // bleeding started, no end yet — still luteal until bleed confirmed
+    return getPhaseKey(doc);
+  })();
+  const cur   = curKey ? PHASES[curKey] : null;
+  const guide = doc ? DAY_GUIDE[Math.min(doc, 28)] : (isActiveBleeding ? DAY_GUIDE[28] : null);
   const moon   = getMoonPhase(new Date());
 
+  // Predict next period: cycleStartDate + AVG_CYCLE days
   const nextPeriod = cycleStartDate ? (()=>{ const d=new Date(cycleStartDate+"T12:00:00"); d.setDate(d.getDate()+AVG_CYCLE); return d; })() : null;
   const daysUntil  = nextPeriod ? Math.max(0,Math.ceil((nextPeriod-new Date())/86400000)) : null;
 
