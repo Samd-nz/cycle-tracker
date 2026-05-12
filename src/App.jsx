@@ -220,6 +220,7 @@ export default function App() {
   // Journal UI
   const [openGroups, setOpenGroups] = useState({});
   const [showUnexpected, setShowUnexpected] = useState(false);
+  const [dupError, setDupError] = useState(false);
 
   // Stats date range
   const [statsRange, setStatsRange] = useState("all");
@@ -303,8 +304,9 @@ export default function App() {
   const guide = doc ? DAY_GUIDE[Math.min(doc, 28)] : (isActiveBleeding ? DAY_GUIDE[28] : null);
   const moon   = getMoonPhase(new Date());
 
-  // Predict next period: cycleStartDate + AVG_CYCLE days
-  const nextPeriod = cycleStartDate ? (()=>{ const d=new Date(cycleStartDate+"T12:00:00"); d.setDate(d.getDate()+AVG_CYCLE); return d; })() : null;
+  // Predict next period: based on lastStart + AVG_CYCLE
+  // Using lastStart ensures it resets correctly when period_start entries are deleted
+  const nextPeriod = lastStart ? (()=>{ const d=new Date(lastStart+"T12:00:00"); d.setDate(d.getDate()+AVG_CYCLE); return d; })() : null;
   const daysUntil  = nextPeriod ? Math.max(0,Math.ceil((nextPeriod-new Date())/86400000)) : null;
 
   const dispKey  = activePhase||curKey;
@@ -340,6 +342,10 @@ export default function App() {
   async function addEntry() {
     const date = addOtherDay ? addDate : todayStr();
     const note = addNote.trim()||null;
+    // Check for duplicate (same type + same date)
+    const isDuplicate = events.some(e => e.type === addType && e.date === date);
+    if(isDuplicate) { setDupError(true); setTimeout(()=>setDupError(false), 4000); return; }
+    setDupError(false);
     // Optimistic update
     const tempId = Date.now();
     const optimistic = { id:tempId, type:addType, date, note };
@@ -400,11 +406,11 @@ export default function App() {
 
   // ── Style helpers ──────────────────────────────────────────────────────────
   const card = (extra={}) => ({background:T.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${T.color}28`,...extra});
-  const sl   = {fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2.8,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:12,display:"block"};
-  const inp  = (c=T.color) => ({width:"100%",padding:"10px 13px",borderRadius:10,border:`1px solid ${c}44`,background:"#ffffff0D",color:T.textColor,fontFamily:"'Raleway',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"});
+  const sl   = {fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2.8,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:12,display:"block"};
+  const inp  = (c=T.color) => ({width:"100%",padding:"10px 13px",borderRadius:10,border:`1px solid ${c}44`,background:"#ffffff0D",color:T.textColor,fontFamily:"'Raleway',sans-serif",fontSize:17,outline:"none",boxSizing:"border-box"});
   const sel  = (c=T.color) => ({...inp(c),cursor:"pointer",appearance:"none",WebkitAppearance:"none",backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 13px center"});
-  const pbtn = (c=T.color,bg=T.bg) => ({padding:"11px",borderRadius:100,border:"none",background:c,color:bg,fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",width:"100%"});
-  const sbtn = (c=T.color) => ({padding:"10px",borderRadius:100,border:`1px solid ${c}44`,background:"transparent",color:c,fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",width:"100%"});
+  const pbtn = (c=T.color,bg=T.bg) => ({padding:"11px",borderRadius:100,border:"none",background:c,color:bg,fontFamily:"'Raleway',sans-serif",fontSize:14,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",width:"100%"});
+  const sbtn = (c=T.color) => ({padding:"10px",borderRadius:100,border:`1px solid ${c}44`,background:"transparent",color:c,fontFamily:"'Raleway',sans-serif",fontSize:14,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",width:"100%"});
 
   // Add entry form rendered inline (not as a nested component) to preserve focus
   const addEntryForm = (
@@ -412,21 +418,21 @@ export default function App() {
       <span style={sl}>Add an entry</span>
 
       {/* Type */}
-      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Event type</p>
+      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Event type</p>
       <select value={addType} onChange={e=>setAddType(e.target.value)} style={{...sel(),marginBottom:6}}>
         {EVENT_TYPES.map(et=><option key={et.key} value={et.key}>{et.emoji} {et.label}</option>)}
       </select>
-      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,lineHeight:1.5,marginBottom:14,paddingLeft:2}}>{EVENT_MAP[addType]?.note}</p>
+      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:T.mutedColor,lineHeight:1.5,marginBottom:14,paddingLeft:2}}>{EVENT_MAP[addType]?.note}</p>
 
       {/* Notes */}
-      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Notes (optional)</p>
+      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Notes (optional)</p>
       <textarea value={addNote} onChange={e=>setAddNote(e.target.value)} placeholder="How are you feeling? Any observations…" rows={3}
         style={{...inp(),resize:"none",lineHeight:1.6,marginBottom:14}} />
 
       {/* Other day toggle */}
       {addOtherDay && (
         <div style={{marginBottom:14}}>
-          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Date</p>
+          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.7,marginBottom:6}}>Date</p>
           <input type="date" value={addDate} onChange={e=>setAddDate(e.target.value)} style={inp()} />
         </div>
       )}
@@ -438,6 +444,12 @@ export default function App() {
       </div>
       {addOtherDay && (
         <button onClick={addEntry} style={{...pbtn(),marginTop:8}}>✦ Add for {fmtShort(addDate)}</button>
+      )}
+      {dupError && (
+        <div style={{marginTop:12,padding:"10px 14px",background:"#E07A4018",borderRadius:10,border:"1px solid #E07A4044",display:"flex",gap:10,alignItems:"center"}}>
+          <span style={{fontSize:16}}>⚠️</span>
+          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:"#E07A40",lineHeight:1.5}}>An identical entry already exists for this date. Please check your journal.</p>
+        </div>
       )}
     </div>
   );
@@ -466,30 +478,30 @@ export default function App() {
         {loading&&(
           <div style={{position:"fixed",inset:0,background:T.bg,zIndex:100,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
             <div className="pulse" style={{fontSize:48}}>🌑</div>
-            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:3,textTransform:"uppercase",color:T.color,opacity:.8}}>Loading your cycle…</p>
+            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,letterSpacing:3,textTransform:"uppercase",color:T.color,opacity:.8}}>Loading your cycle…</p>
           </div>
         )}
 
         {/* Sync error banner */}
         {syncError&&!loading&&(
           <div style={{background:"#E0A06022",borderBottom:"1px solid #E0A06044",padding:"10px 22px",display:"flex",alignItems:"center",gap:10,position:"relative",zIndex:2}}>
-            <span style={{fontSize:16}}>⚠️</span>
-            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:"#E0A060",lineHeight:1.5}}>Showing cached data — changes may not be saved. Check your connection.</p>
+            <span style={{fontSize:18}}>⚠️</span>
+            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:"#E0A060",lineHeight:1.5}}>Showing cached data — changes may not be saved. Check your connection.</p>
           </div>
         )}
 
         {/* Header */}
         <div style={{position:"relative",zIndex:1,padding:"30px 22px 14px",borderBottom:`1px solid ${T.color}28`}}>
-          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:3.5,textTransform:"uppercase",color:T.color,opacity:.85}}>{fmtDisplay(new Date())}</p>
-          <h1 style={{fontSize:30,fontWeight:300,fontStyle:"italic",color:T.textColor,marginTop:4,letterSpacing:.3}}>{cur?cur.name:"Cycle Tracker"}</h1>
-          {cur&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,color:T.color,letterSpacing:2.5,textTransform:"uppercase",marginTop:5,opacity:.8}}>{cur.tagline}</p>}
+          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:3.5,textTransform:"uppercase",color:T.color,opacity:.85}}>{fmtDisplay(new Date())}</p>
+          <h1 style={{fontSize:32,fontWeight:300,fontStyle:"italic",color:T.textColor,marginTop:4,letterSpacing:.3}}>{cur?cur.name:"Cycle Tracker"}</h1>
+          {cur&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.color,letterSpacing:2.5,textTransform:"uppercase",marginTop:5,opacity:.8}}>{cur.tagline}</p>}
         </div>
 
         {/* Nav */}
         {view!=="phase"&&(
-          <div style={{position:"relative",zIndex:1,display:"flex",borderBottom:`1px solid ${T.color}28`}}>
-            {[["home","Today"],["log","Journal"],["stats","Stats"]].map(([v,l])=>(
-              <button key={v} onClick={()=>setView(v)} style={{flex:1,padding:"11px",border:"none",background:"transparent",fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:3,textTransform:"uppercase",color:view===v?T.color:T.mutedColor,borderBottom:view===v?`1.5px solid ${T.color}`:"1.5px solid transparent",cursor:"pointer",transition:"all .3s"}}>{l}</button>
+          <div style={{position:"sticky",top:0,zIndex:10,display:"flex",borderBottom:`1px solid ${T.color}28`,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",background:`${T.bg}EE`}}>
+            {[["home","Today"],["log","Journal"],["stats","Stats"],["about","About"]].map(([v,l])=>(
+              <button key={v} onClick={()=>setView(v)} style={{flex:1,padding:"11px",border:"none",background:"transparent",fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:3,textTransform:"uppercase",color:view===v?T.color:T.mutedColor,borderBottom:view===v?`1.5px solid ${T.color}`:"1.5px solid transparent",cursor:"pointer",transition:"all .3s"}}>{l}</button>
             ))}
           </div>
         )}
@@ -504,31 +516,31 @@ export default function App() {
               {!cycleStartDate?(
                 <div style={{...card(),textAlign:"center",padding:"50px 20px"}}>
                   <div className="pulse" style={{fontSize:52,marginBottom:16}}>🌑</div>
-                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:T.mutedColor,lineHeight:1.8,marginBottom:24}}>Log your first period to begin<br/>tracking your sacred cycle</p>
-                  <button onClick={()=>setView("log")} style={{background:T.color,color:T.bg,border:"none",borderRadius:100,padding:"10px 28px",fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2.5,textTransform:"uppercase",cursor:"pointer"}}>Begin</button>
+                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:T.mutedColor,lineHeight:1.8,marginBottom:24}}>Log your first period to begin<br/>tracking your sacred cycle</p>
+                  <button onClick={()=>setView("log")} style={{background:T.color,color:T.bg,border:"none",borderRadius:100,padding:"10px 28px",fontFamily:"'Raleway',sans-serif",fontSize:14,letterSpacing:2.5,textTransform:"uppercase",cursor:"pointer"}}>Begin</button>
                 </div>
               ):(<>
                 {/* Moon + Day */}
                 <div style={{...card(),display:"flex",gap:16,alignItems:"flex-start"}}>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,minWidth:78}}>
                     <MoonImage phase={moon.svg} size={90}/>
-                    <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:T.color,textAlign:"center",opacity:.85,lineHeight:1.4}}>{moon.name}</p>
+                    <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:1.5,textTransform:"uppercase",color:T.color,textAlign:"center",opacity:.85,lineHeight:1.4}}>{moon.name}</p>
                   </div>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:3}}>
-                      <span style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8}}>Day</span>
-                      <span style={{fontSize:28,color:T.color,fontWeight:300,lineHeight:1}}>{doc}</span>
-                      <span style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,opacity:.8}}>of ~28</span>
+                      <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8}}>Day</span>
+                      <span style={{fontSize:30,color:T.color,fontWeight:300,lineHeight:1}}>{doc}</span>
+                      <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.8}}>of ~28</span>
                     </div>
-                    <h3 style={{fontSize:20,fontWeight:400,fontStyle:"italic",color:T.textColor,marginBottom:6}}>{guide?.title}</h3>
-                    <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,lineHeight:1.7}}>{guide?.note}</p>
+                    <h3 style={{fontSize:22,fontWeight:400,fontStyle:"italic",color:T.textColor,marginBottom:6}}>{guide?.title}</h3>
+                    <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.7}}>{guide?.note}</p>
                   </div>
                 </div>
 
                 {/* Moon description */}
                 <div style={{...card(),padding:"13px 18px"}}>
                   <span style={sl}>Tonight's Moon</span>
-                  <p style={{fontSize:16,fontStyle:"italic",color:T.mutedColor,lineHeight:1.7}}>{moon.description}</p>
+                  <p style={{fontSize:18,fontStyle:"italic",color:T.mutedColor,lineHeight:1.7}}>{moon.description}</p>
                 </div>
 
                 {/* Today's energy */}
@@ -537,13 +549,13 @@ export default function App() {
                     <span style={sl}>Today's energy</span>
                     {[["✦ Energy",guide.energy],["✦ Mood",guide.mood],["✦ Body",guide.body]].map(([label,val])=>(
                       <div key={label} style={{display:"flex",gap:12,marginBottom:9,alignItems:"flex-start"}}>
-                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:12,color:T.color,minWidth:62,opacity:.85,marginTop:2}}>{label}</span>
-                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,lineHeight:1.6,flex:1}}>{val}</span>
+                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.color,minWidth:62,opacity:.85,marginTop:2}}>{label}</span>
+                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.6,flex:1}}>{val}</span>
                       </div>
                     ))}
                     <div style={{marginTop:14,padding:"12px 14px",background:T.color+"18",borderRadius:10,borderLeft:`2px solid ${T.color}66`}}>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.85,marginBottom:5}}>Today's ritual</p>
-                      <p style={{fontSize:16,fontStyle:"italic",color:T.textColor,lineHeight:1.5}}>{guide.ritual}</p>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.85,marginBottom:5}}>Today's ritual</p>
+                      <p style={{fontSize:18,fontStyle:"italic",color:T.textColor,lineHeight:1.5}}>{guide.ritual}</p>
                     </div>
                   </div>
                 )}
@@ -551,8 +563,8 @@ export default function App() {
                 {/* Phase overview */}
                 <div style={card()}>
                   <span style={sl}>{cur.name} phase · {cur.days}</span>
-                  <p style={{fontSize:16,fontStyle:"italic",color:T.mutedColor,lineHeight:1.8,marginBottom:14}}>{cur.description}</p>
-                  <button onClick={()=>{setActivePhase(curKey);setPhaseTab("care");setView("phase")}} style={{background:"none",border:`1px solid ${T.color}55`,borderRadius:100,padding:"7px 18px",color:T.color,fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Full phase guide →</button>
+                  <p style={{fontSize:18,fontStyle:"italic",color:T.mutedColor,lineHeight:1.8,marginBottom:14}}>{cur.description}</p>
+                  <button onClick={()=>{setActivePhase(curKey);setPhaseTab("care");setView("phase")}} style={{background:"none",border:`1px solid ${T.color}55`,borderRadius:100,padding:"7px 18px",color:T.color,fontFamily:"'Raleway',sans-serif",fontSize:14,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Full phase guide →</button>
                 </div>
 
                 {/* Next period */}
@@ -560,11 +572,11 @@ export default function App() {
                   <div style={{...card(),display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div>
                       <span style={sl}>Next moon blood</span>
-                      <p style={{fontSize:17,color:T.textColor}}>{fmtShort(nextPeriod.toISOString().slice(0,10))}</p>
+                      <p style={{fontSize:19,color:T.textColor}}>{fmtShort(nextPeriod.toISOString().slice(0,10))}</p>
                     </div>
                     <div style={{textAlign:"center"}}>
-                      <p style={{fontSize:32,color:T.color,fontWeight:300,lineHeight:1}}>{daysUntil}</p>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.color,letterSpacing:1.5,textTransform:"uppercase",opacity:.8}}>days</p>
+                      <p style={{fontSize:34,color:T.color,fontWeight:300,lineHeight:1}}>{daysUntil}</p>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.color,letterSpacing:1.5,textTransform:"uppercase",opacity:.8}}>days</p>
                     </div>
                   </div>
                 )}
@@ -574,7 +586,7 @@ export default function App() {
                   <span style={sl}>The wheel of the cycle</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
                     {Object.entries(PHASES).map(([k,p])=>(
-                      <button key={k} onClick={()=>{setActivePhase(k);setPhaseTab("care");setView("phase")}} style={{background:curKey===k?p.color+"28":"transparent",color:p.color,border:`1px solid ${p.color}55`,borderRadius:100,padding:"5px 14px",fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
+                      <button key={k} onClick={()=>{setActivePhase(k);setPhaseTab("care");setView("phase")}} style={{background:curKey===k?p.color+"28":"transparent",color:p.color,border:`1px solid ${p.color}55`,borderRadius:100,padding:"5px 14px",fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
                         {p.emoji} {p.name}
                       </button>
                     ))}
@@ -585,14 +597,14 @@ export default function App() {
                 <div style={card()}>
                   <span style={sl}>Life stage wisdom</span>
                   {Object.entries(AGE_INFO).map(([k,a])=>(
-                    <button key={k} onClick={()=>setAgeView(ageView===k?null:k)} style={{display:"block",width:"100%",textAlign:"left",background:ageView===k?T.color+"18":"transparent",border:`1px solid ${ageView===k?T.color:T.color+"44"}`,borderRadius:10,padding:"10px 14px",marginBottom:6,cursor:"pointer",fontFamily:"'Raleway',sans-serif",color:ageView===k?T.color:T.mutedColor,fontSize:14}}>
+                    <button key={k} onClick={()=>setAgeView(ageView===k?null:k)} style={{display:"block",width:"100%",textAlign:"left",background:ageView===k?T.color+"18":"transparent",border:`1px solid ${ageView===k?T.color:T.color+"44"}`,borderRadius:10,padding:"10px 14px",marginBottom:6,cursor:"pointer",fontFamily:"'Raleway',sans-serif",color:ageView===k?T.color:T.mutedColor,fontSize:16}}>
                       {a.emoji} {a.label}
                     </button>
                   ))}
                   {ageView&&(
                     <div style={{background:T.color+"10",borderRadius:10,padding:"14px",marginTop:4,border:`1px solid ${T.color}28`}}>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,lineHeight:1.8}}>{AGE_INFO[ageView].content}</p>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,color:T.color,opacity:.55,marginTop:10}}>Always speak with your GP about significant cycle changes.</p>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.8}}>{AGE_INFO[ageView].content}</p>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.color,opacity:.55,marginTop:10}}>Always speak with your GP about significant cycle changes.</p>
                     </div>
                   )}
                 </div>
@@ -611,7 +623,7 @@ export default function App() {
               {/* Grouped cycles */}
               {cycleGroups.length===0?(
                 <div style={{...card(),textAlign:"center",padding:"30px 20px"}}>
-                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,lineHeight:1.8}}>No entries yet.<br/>Add your first entry above to begin your journal.</p>
+                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.8}}>No entries yet.<br/>Add your first entry above to begin your journal.</p>
                 </div>
               ):(
                 cycleGroups.map((group,gi)=>{
@@ -626,37 +638,37 @@ export default function App() {
                       {/* Group header — clickable */}
                       <button onClick={()=>toggleGroup(key)} style={{width:"100%",background:T.cardBg,borderRadius:isOpen?"16px 16px 0 0":16,padding:"16px 18px",border:`1px solid ${T.color}28`,borderBottom:isOpen?`1px solid ${T.color}18`:"none",cursor:"pointer",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div style={{flex:1}}>
-                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2.5,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:6}}>
+                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2.5,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:6}}>
                             {group.isCurrent?"Current cycle":"Cycle"}
                           </p>
-                          <p style={{fontSize:16,color:T.textColor,lineHeight:1.3,marginBottom:8}}>{label}</p>
+                          <p style={{fontSize:18,color:T.textColor,lineHeight:1.3,marginBottom:8}}>{label}</p>
                           <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
                             <div>
-                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Cycle length</p>
-                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:group.cycleLength?T.textColor:T.mutedColor}}>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Cycle length</p>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:group.cycleLength?T.textColor:T.mutedColor}}>
                                 {group.cycleLength?`${group.cycleLength} days`:"Ongoing"}
                               </p>
                             </div>
                             <div>
-                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Days bleeding</p>
-                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:group.daysBleeding?T.textColor:T.mutedColor}}>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Days bleeding</p>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:group.daysBleeding?T.textColor:T.mutedColor}}>
                                 {group.daysBleeding?`${group.daysBleeding} days`:"Not logged"}
                               </p>
                             </div>
                             <div>
-                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Entries</p>
-                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:T.textColor}}>{group.events.length}</p>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Entries</p>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:T.textColor}}>{group.events.length}</p>
                             </div>
                           </div>
                         </div>
-                        <span style={{color:T.color,fontSize:18,opacity:.7,marginLeft:12,marginTop:2,transition:"transform .3s",display:"block",transform:isOpen?"rotate(180deg)":"none"}}>⌄</span>
+                        <span style={{color:T.color,fontSize:34,opacity:.9,marginLeft:12,marginTop:-2,transition:"transform .3s",display:"block",transform:isOpen?"rotate(180deg)":"none",lineHeight:1}}>⌄</span>
                       </button>
 
                       {/* Group entries */}
                       {isOpen&&(
                         <div style={{background:T.cardBg,borderRadius:"0 0 16px 16px",border:`1px solid ${T.color}28`,borderTop:"none",overflow:"hidden"}}>
                           {group.events.length===0?(
-                            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,padding:"16px 18px"}}>No entries in this cycle.</p>
+                            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,padding:"16px 18px"}}>No entries in this cycle.</p>
                           ):(
                             group.events.map((ev,ei)=>{
                               const et = EVENT_MAP[ev.type]||{emoji:"✦",label:ev.type,color:T.color};
@@ -665,38 +677,38 @@ export default function App() {
                                 <div key={ev.id} style={{padding:"12px 18px",borderTop:`1px solid ${T.color}14`}}>
                                   {isEditing?(
                                     <div style={{background:T.color+"0C",borderRadius:12,padding:"14px"}}>
-                                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:10}}>Edit entry</p>
+                                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:10}}>Edit entry</p>
                                       <div style={{marginBottom:10}}>
-                                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,marginBottom:5,letterSpacing:1}}>Type</p>
+                                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,marginBottom:5,letterSpacing:1}}>Type</p>
                                         <select value={editType} onChange={e=>setEditType(e.target.value)} style={sel()}>
                                           {EVENT_TYPES.map(et=><option key={et.key} value={et.key}>{et.emoji} {et.label}</option>)}
                                         </select>
                                       </div>
                                       <div style={{marginBottom:10}}>
-                                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,marginBottom:5,letterSpacing:1}}>Date</p>
+                                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,marginBottom:5,letterSpacing:1}}>Date</p>
                                         <input type="date" value={editDate} onChange={e=>setEditDate(e.target.value)} style={inp()}/>
                                       </div>
                                       <div style={{marginBottom:14}}>
-                                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,marginBottom:5,letterSpacing:1}}>Notes</p>
+                                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,marginBottom:5,letterSpacing:1}}>Notes</p>
                                         <textarea value={editNote} onChange={e=>setEditNote(e.target.value)} rows={2} style={{...inp(),resize:"none"}}/>
                                       </div>
                                       <div style={{display:"flex",gap:8}}>
-                                        <button onClick={saveEdit} style={{flex:1,padding:"9px",borderRadius:100,border:"none",background:T.color,color:T.bg,fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Save</button>
-                                        <button onClick={cancelEdit} style={{flex:1,padding:"9px",borderRadius:100,border:`1px solid ${T.color}44`,background:"transparent",color:T.mutedColor,fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Cancel</button>
+                                        <button onClick={saveEdit} style={{flex:1,padding:"9px",borderRadius:100,border:"none",background:T.color,color:T.bg,fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Save</button>
+                                        <button onClick={cancelEdit} style={{flex:1,padding:"9px",borderRadius:100,border:`1px solid ${T.color}44`,background:"transparent",color:T.mutedColor,fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Cancel</button>
                                       </div>
                                     </div>
                                   ):(
                                     <>
                                       <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
-                                        <span style={{fontSize:20,lineHeight:1,marginTop:2}}>{et.emoji}</span>
+                                        <span style={{fontSize:22,lineHeight:1,marginTop:2}}>{et.emoji}</span>
                                         <div style={{flex:1}}>
-                                          <p style={{fontSize:16,color:T.textColor,lineHeight:1.3}}>{et.label}</p>
-                                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,marginTop:2}}>{fmtFull(ev.date)}</p>
-                                          {ev.note&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,marginTop:6,fontStyle:"italic",lineHeight:1.5,borderLeft:`2px solid ${T.color}44`,paddingLeft:8}}>{ev.note}</p>}
+                                          <p style={{fontSize:18,color:T.textColor,lineHeight:1.3}}>{et.label}</p>
+                                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:T.mutedColor,marginTop:2}}>{fmtFull(ev.date)}</p>
+                                          {ev.note&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,marginTop:6,fontStyle:"italic",lineHeight:1.5,borderLeft:`2px solid ${T.color}44`,paddingLeft:8}}>{ev.note}</p>}
                                         </div>
                                         <div style={{display:"flex",gap:6,flexShrink:0}}>
-                                          <button onClick={()=>startEdit(ev)} style={{background:"none",border:`1px solid ${T.color}44`,borderRadius:100,padding:"4px 11px",color:T.color,fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>Edit</button>
-                                          <button onClick={()=>deleteEvent(ev.id)} style={{background:"none",border:`1px solid ${T.color}28`,borderRadius:100,padding:"4px 9px",color:T.mutedColor,fontFamily:"'Raleway',sans-serif",fontSize:11,cursor:"pointer"}}>✕</button>
+                                          <button onClick={()=>startEdit(ev)} style={{background:"none",border:`1px solid ${T.color}44`,borderRadius:100,padding:"4px 11px",color:T.color,fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>Edit</button>
+                                          <button onClick={()=>deleteEvent(ev.id)} style={{background:"none",border:`1px solid ${T.color}28`,borderRadius:100,padding:"4px 9px",color:T.mutedColor,fontFamily:"'Raleway',sans-serif",fontSize:13,cursor:"pointer"}}>✕</button>
                                         </div>
                                       </div>
                                     </>
@@ -725,14 +737,14 @@ export default function App() {
                 <span style={sl}>Date range</span>
                 <div style={{display:"flex",gap:7}}>
                   {[["all","All time"],["1y","Past year"],["6m","Past 6 months"]].map(([v,l])=>(
-                    <button key={v} onClick={()=>setStatsRange(v)} style={{flex:1,padding:"8px 4px",border:`1px solid ${statsRange===v?T.color:T.color+"44"}`,borderRadius:8,fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:1,textTransform:"uppercase",cursor:"pointer",background:statsRange===v?T.color+"22":"transparent",color:statsRange===v?T.color:T.mutedColor,transition:"all .2s"}}>{l}</button>
+                    <button key={v} onClick={()=>setStatsRange(v)} style={{flex:1,padding:"8px 4px",border:`1px solid ${statsRange===v?T.color:T.color+"44"}`,borderRadius:8,fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:1,textTransform:"uppercase",cursor:"pointer",background:statsRange===v?T.color+"22":"transparent",color:statsRange===v?T.color:T.mutedColor,transition:"all .2s"}}>{l}</button>
                   ))}
                 </div>
               </div>
 
               {filteredGroups.length===0?(
                 <div style={{...card(),textAlign:"center",padding:"30px 20px"}}>
-                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,lineHeight:1.8}}>No cycle data for this period yet.<br/>Log your period to begin building stats.</p>
+                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.8}}>No cycle data for this period yet.<br/>Log your period to begin building stats.</p>
                 </div>
               ):(<>
 
@@ -746,25 +758,25 @@ export default function App() {
                       {label:"Avg days bleeding", value:avgBleed,                     unit:"days",    sub:bleedGroups.length<filteredGroups.length?"Based on cycles with end logged":null},
                     ].map(({label,value,unit,sub})=>(
                       <div key={label} style={{background:T.color+"0C",borderRadius:12,padding:"14px",border:`1px solid ${T.color}28`}}>
-                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:8,lineHeight:1.4}}>{label}</p>
+                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:8,lineHeight:1.4}}>{label}</p>
                         {value!==null?(
                           <>
-                            <p style={{fontSize:30,color:T.color,fontWeight:300,lineHeight:1}}>{value}</p>
-                            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,marginTop:2}}>{unit}</p>
+                            <p style={{fontSize:32,color:T.color,fontWeight:300,lineHeight:1}}>{value}</p>
+                            <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,marginTop:2}}>{unit}</p>
                           </>
                         ):(
-                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,marginTop:4}}>Not enough data</p>
+                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,marginTop:4}}>Not enough data</p>
                         )}
-                        {sub&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,opacity:.7,marginTop:6,lineHeight:1.4}}>{sub}</p>}
+                        {sub&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.7,marginTop:6,lineHeight:1.4}}>{sub}</p>}
                       </div>
                     ))}
 
                     {/* Unexpected bleeding — clickable */}
                     <div onClick={()=>setShowUnexpected(p=>!p)} style={{background:unexpectedEvents.length>0?T.color+"14":T.color+"0C",borderRadius:12,padding:"14px",border:`1px solid ${unexpectedEvents.length>0?T.color+"55":T.color+"28"}`,cursor:"pointer",gridColumn:unexpectedEvents.length>0?"span 1":"span 1"}}>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:8,lineHeight:1.4}}>Unexpected bleeding</p>
-                      <p style={{fontSize:30,color:unexpectedEvents.length>0?"#E0A060":T.color,fontWeight:300,lineHeight:1}}>{unexpectedEvents.length}</p>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.mutedColor,marginTop:2}}>events</p>
-                      {unexpectedEvents.length>0&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.color,opacity:.7,marginTop:6}}>Tap to view ↓</p>}
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8,marginBottom:8,lineHeight:1.4}}>Unexpected bleeding</p>
+                      <p style={{fontSize:32,color:unexpectedEvents.length>0?"#E0A060":T.color,fontWeight:300,lineHeight:1}}>{unexpectedEvents.length}</p>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,marginTop:2}}>events</p>
+                      {unexpectedEvents.length>0&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.color,opacity:.7,marginTop:6}}>Tap to view ↓</p>}
                     </div>
                   </div>
                 </div>
@@ -775,16 +787,16 @@ export default function App() {
                     <span style={sl}>Unexpected bleeding events</span>
                     {[...unexpectedEvents].sort((a,b)=>b.date.localeCompare(a.date)).map((ev,i,arr)=>(
                       <div key={ev.id} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:i<arr.length-1?`1px solid ${T.color}18`:"none",alignItems:"flex-start"}}>
-                        <span style={{fontSize:18,lineHeight:1,marginTop:2}}>⚠️</span>
+                        <span style={{fontSize:20,lineHeight:1,marginTop:2}}>⚠️</span>
                         <div style={{flex:1}}>
-                          <p style={{fontSize:16,color:T.textColor}}>{fmtFull(ev.date)}</p>
-                          {ev.note&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,marginTop:4,fontStyle:"italic",lineHeight:1.5}}>{ev.note}</p>}
+                          <p style={{fontSize:18,color:T.textColor}}>{fmtFull(ev.date)}</p>
+                          {ev.note&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:T.mutedColor,marginTop:4,fontStyle:"italic",lineHeight:1.5}}>{ev.note}</p>}
                         </div>
                       </div>
                     ))}
                     {unexpectedEvents.length>=3&&(
                       <div style={{marginTop:14,padding:"12px",background:"#E0A06010",borderRadius:10,border:"1px solid #E0A06033"}}>
-                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:"#E0A060",lineHeight:1.7}}>Three or more unexpected bleeding events is worth discussing with your GP or gynaecologist.</p>
+                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:"#E0A060",lineHeight:1.7}}>Three or more unexpected bleeding events is worth discussing with your GP or gynaecologist.</p>
                       </div>
                     )}
                   </div>
@@ -796,17 +808,17 @@ export default function App() {
                   {filteredGroups.map((g,i)=>(
                     <div key={g.cycleStart} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:i<filteredGroups.length-1?`1px solid ${T.color}18`:"none"}}>
                       <div>
-                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.textColor,marginBottom:2}}>{fmtShort(g.cycleStart)}</p>
-                        {g.isCurrent&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:T.color,letterSpacing:1.5,textTransform:"uppercase",opacity:.8}}>Current</p>}
+                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.textColor,marginBottom:2}}>{fmtShort(g.cycleStart)}</p>
+                        {g.isCurrent&&<p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.color,letterSpacing:1.5,textTransform:"uppercase",opacity:.8}}>Current</p>}
                       </div>
                       <div style={{display:"flex",gap:16,textAlign:"right"}}>
                         <div>
-                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,color:T.mutedColor,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>Length</p>
-                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:g.cycleLength?T.textColor:T.mutedColor}}>{g.cycleLength?`${g.cycleLength}d`:"–"}</p>
+                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,color:T.mutedColor,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>Length</p>
+                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:g.cycleLength?T.textColor:T.mutedColor}}>{g.cycleLength?`${g.cycleLength}d`:"–"}</p>
                         </div>
                         <div>
-                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:10,color:T.mutedColor,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>Bleeding</p>
-                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:g.daysBleeding?T.textColor:T.mutedColor}}>{g.daysBleeding?`${g.daysBleeding}d`:"–"}</p>
+                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,color:T.mutedColor,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>Bleeding</p>
+                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:g.daysBleeding?T.textColor:T.mutedColor}}>{g.daysBleeding?`${g.daysBleeding}d`:"–"}</p>
                         </div>
                       </div>
                     </div>
@@ -817,61 +829,111 @@ export default function App() {
           )}
 
           {/* ══════════════════════════════════════════════════════════════════
+              ABOUT TAB
+          ══════════════════════════════════════════════════════════════════ */}
+          {view==="about"&&(
+            <div style={{padding:"18px 20px 100px"}} className="fi">
+              {/* Description */}
+              <div style={card()}>
+                <span style={sl}>About this app</span>
+                <p style={{fontSize:16,fontStyle:"italic",color:T.mutedColor,lineHeight:1.85,marginBottom:14}}>Cycle Tracker is a personal menstrual cycle companion designed to help you understand, track and support your body through every phase of your cycle.</p>
+                <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,lineHeight:1.8}}>Built with care to provide evidence-based information on nutrition, supplementation and self-care — tailored to each phase of the cycle. All information has been reviewed against current clinical guidelines and peer-reviewed research.</p>
+              </div>
+
+              {/* References */}
+              <div style={card()}>
+                <span style={sl}>Clinical references</span>
+                {[
+                  {title:"Mayo Clinic — Menstrual cramps", url:"https://www.mayoclinic.org/diseases-conditions/menstrual-cramps/symptoms-causes/syc-20374938", note:"Heat therapy, NSAIDs and omega-3s for dysmenorrhea"},
+                  {title:"ACOG — Dysmenorrhea: Painful Periods", url:"https://www.acog.org/womens-health/faqs/dysmenorrhea-painful-periods", note:"Clinical guidance on period pain management"},
+                  {title:"Harvard Health — Premenstrual syndrome", url:"https://www.health.harvard.edu/womens-health/premenstrual-syndrome-pms", note:"PMS symptoms, calcium, magnesium and B6 evidence"},
+                  {title:"NIH — Calcium and PMS (RCT)", url:"https://pubmed.ncbi.nlm.nih.gov/9731851/", note:"Randomised trial showing ~50% reduction in PMS with calcium"},
+                  {title:"PMC — Magnesium and PMS", url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5986463/", note:"Systematic review of magnesium for PMS symptoms"},
+                  {title:"PMC — Menstrual cycle and cognition", url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3677834/", note:"Cognitive changes across follicular and luteal phases"},
+                  {title:"Cleveland Clinic — Perimenopause", url:"https://my.clevelandclinic.org/health/diseases/21608-perimenopause", note:"Perimenopause symptoms, timeline and management"},
+                  {title:"ACOG — Perimenopausal changes", url:"https://www.acog.org/womens-health/faqs/the-menopause-years", note:"Clinical overview of the menopausal transition"},
+                  {title:"PMC — Vitamin B1 and dysmenorrhea", url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4562453/", note:"Thiamine supplementation for period pain relief"},
+                  {title:"PMC — Omega-3 and menstrual pain", url:"https://pubmed.ncbi.nlm.nih.gov/22261128/", note:"Fish oil vs ibuprofen for dysmenorrhea"},
+                  {title:"Cochrane — Exercise for dysmenorrhea", url:"https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD004142.pub4/full", note:"Evidence for exercise reducing menstrual pain"},
+                  {title:"PMC — Chasteberry (Vitex) for PMS", url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4528347/", note:"Clinical review of Vitex agnus-castus for PMS"},
+                  {title:"NASA — Lunar Reconnaissance Orbiter moon images", url:"https://svs.gsfc.nasa.gov/5587", note:"Public domain moon phase photography used in this app"},
+                ].map((ref,i,arr)=>(
+                  <div key={i} style={{padding:"12px 0",borderBottom:i<arr.length-1?`1px solid ${T.color}18`:"none"}}>
+                    <a href={ref.url} target="_blank" rel="noopener noreferrer" style={{fontSize:15,color:T.color,textDecoration:"none",display:"block",marginBottom:4,lineHeight:1.4}}>{ref.title} ↗</a>
+                    <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,lineHeight:1.5}}>{ref.note}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Disclaimer */}
+              <div style={{...card(),background:T.color+"0A",border:`1px solid ${T.color}28`}}>
+                <span style={sl}>Important note</span>
+                <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:T.mutedColor,lineHeight:1.8}}>This app provides general health information only. It is not a substitute for professional medical advice, diagnosis or treatment. Always consult your GP or a qualified healthcare provider before starting supplements or if you have concerns about your cycle.</p>
+              </div>
+
+              {/* Built with */}
+              <div style={{...card(),padding:"14px 18px"}}>
+                <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,color:T.mutedColor,lineHeight:1.7,textAlign:"center"}}>Built with care using React, Vite, Supabase & Vercel<br/>Moon photography courtesy of NASA · Lunar Reconnaissance Orbiter</p>
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════════════
               PHASE DETAIL
           ══════════════════════════════════════════════════════════════════ */}
           {view==="phase"&&disp&&(
             <div style={{background:disp.bg,minHeight:"100vh",transition:"background .6s"}}>
               <div style={{padding:"18px 20px 100px"}} className="fi">
-                <button onClick={()=>{setActivePhase(null);setView("home")}} style={{background:"none",border:"none",cursor:"pointer",color:disp.color,fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2.5,padding:0,marginBottom:16,textTransform:"uppercase"}}>← Back</button>
+                <button onClick={()=>{setActivePhase(null);setView("home")}} style={{background:"none",border:"none",cursor:"pointer",color:disp.color,fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2.5,padding:0,marginBottom:16,textTransform:"uppercase"}}>← Back</button>
                 <div style={{textAlign:"center",marginBottom:22}}>
                   <div className="pulse" style={{fontSize:46,marginBottom:8}}>{disp.emoji}</div>
-                  <h2 style={{fontSize:32,fontWeight:300,fontStyle:"italic",color:disp.textColor}}>{disp.name}</h2>
-                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:disp.color,letterSpacing:3,textTransform:"uppercase",marginTop:6,opacity:.9}}>{disp.tagline}</p>
-                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,color:disp.mutedColor,letterSpacing:1.5,marginTop:4}}>{disp.days}</p>
+                  <h2 style={{fontSize:34,fontWeight:300,fontStyle:"italic",color:disp.textColor}}>{disp.name}</h2>
+                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:disp.color,letterSpacing:3,textTransform:"uppercase",marginTop:6,opacity:.9}}>{disp.tagline}</p>
+                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:disp.mutedColor,letterSpacing:1.5,marginTop:4}}>{disp.days}</p>
                 </div>
                 <div style={{background:disp.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${disp.color}28`}}>
-                  <p style={{fontSize:17,fontStyle:"italic",color:disp.mutedColor,lineHeight:1.85}}>{disp.description}</p>
+                  <p style={{fontSize:19,fontStyle:"italic",color:disp.mutedColor,lineHeight:1.85}}>{disp.description}</p>
                 </div>
                 <div style={{background:disp.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${disp.color}28`}}>
-                  <span style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2.8,textTransform:"uppercase",color:disp.color,opacity:.8,marginBottom:12,display:"block"}}>What to expect</span>
+                  <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2.8,textTransform:"uppercase",color:disp.color,opacity:.8,marginBottom:12,display:"block"}}>What to expect</span>
                   {disp.symptoms.map((s,i)=>(
                     <div key={i} style={{display:"flex",gap:12,padding:"8px 0",borderBottom:i<disp.symptoms.length-1?`1px solid ${disp.color}18`:"none"}}>
-                      <span style={{color:disp.color,fontSize:12,marginTop:3,opacity:.8}}>✦</span>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:14,color:disp.mutedColor,lineHeight:1.5}}>{s}</p>
+                      <span style={{color:disp.color,fontSize:14,marginTop:3,opacity:.8}}>✦</span>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:disp.mutedColor,lineHeight:1.5}}>{s}</p>
                     </div>
                   ))}
                 </div>
                 <div style={{display:"flex",gap:6,marginBottom:12}}>
                   {[["care","Self-care"],["food","Food"],["supplements","Supplements"]].map(([t,l])=>(
-                    <button key={t} onClick={()=>setPhaseTab(t)} style={{flex:1,padding:"9px 4px",border:`1px solid ${phaseTab===t?disp.color:disp.color+"44"}`,borderRadius:8,fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",background:phaseTab===t?disp.color+"22":"transparent",color:phaseTab===t?disp.color:disp.mutedColor,transition:"all .2s"}}>{l}</button>
+                    <button key={t} onClick={()=>setPhaseTab(t)} style={{flex:1,padding:"9px 4px",border:`1px solid ${phaseTab===t?disp.color:disp.color+"44"}`,borderRadius:8,fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",background:phaseTab===t?disp.color+"22":"transparent",color:phaseTab===t?disp.color:disp.mutedColor,transition:"all .2s"}}>{l}</button>
                   ))}
                 </div>
                 {["care","food","supplements"].map(tab=>tab===phaseTab&&(
                   <div key={tab} style={{background:disp.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${disp.color}28`}}>
-                    <span style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2.8,textTransform:"uppercase",color:disp.color,opacity:.8,marginBottom:12,display:"block"}}>
+                    <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2.8,textTransform:"uppercase",color:disp.color,opacity:.8,marginBottom:12,display:"block"}}>
                       {tab==="care"?"Rituals & self-care":tab==="food"?"Nourishment for this phase":"Supplements to consider"}
                     </span>
                     {(tab==="care"?disp.selfCare:tab==="food"?disp.foods:disp.supplements).map((item,i,arr)=>(
                       <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:i<arr.length-1?`1px solid ${disp.color}18`:"none",alignItems:"flex-start"}}>
-                        <span style={{color:disp.color,fontSize:12,marginTop:4,opacity:.8}}>✦</span>
+                        <span style={{color:disp.color,fontSize:14,marginTop:4,opacity:.8}}>✦</span>
                         <div>
-                          <p style={{fontSize:16,color:disp.textColor,lineHeight:1.4,marginBottom:4}}>{tab==="care"?item.tip:item.item}</p>
-                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:disp.mutedColor,lineHeight:1.6}}>{tab==="care"?item.why:item.reason}</p>
+                          <p style={{fontSize:18,color:disp.textColor,lineHeight:1.4,marginBottom:4}}>{tab==="care"?item.tip:item.item}</p>
+                          <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:disp.mutedColor,lineHeight:1.6}}>{tab==="care"?item.why:item.reason}</p>
                         </div>
                       </div>
                     ))}
                     {tab==="supplements"&&(
                       <div style={{marginTop:14,padding:"12px",background:disp.color+"0C",borderRadius:10,border:`1px solid ${disp.color}28`}}>
-                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:disp.mutedColor,lineHeight:1.7}}>Consult a GP or pharmacist before starting new supplements, especially with existing medications.</p>
+                        <p style={{fontFamily:"'Raleway',sans-serif",fontSize:15,color:disp.mutedColor,lineHeight:1.7}}>Consult a GP or pharmacist before starting new supplements, especially with existing medications.</p>
                       </div>
                     )}
                   </div>
                 ))}
                 <div style={{background:disp.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${disp.color}28`}}>
-                  <span style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:2.8,textTransform:"uppercase",color:disp.color,opacity:.8,marginBottom:12,display:"block"}}>Other phases</span>
+                  <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2.8,textTransform:"uppercase",color:disp.color,opacity:.8,marginBottom:12,display:"block"}}>Other phases</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
                     {Object.entries(PHASES).filter(([k])=>k!==dispKey).map(([k,p])=>(
-                      <button key={k} onClick={()=>{setActivePhase(k);setPhaseTab("care")}} style={{background:"transparent",color:p.color,border:`1px solid ${p.color}55`,borderRadius:100,padding:"5px 14px",fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
+                      <button key={k} onClick={()=>{setActivePhase(k);setPhaseTab("care")}} style={{background:"transparent",color:p.color,border:`1px solid ${p.color}55`,borderRadius:100,padding:"5px 14px",fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
                         {p.emoji} {p.name}
                       </button>
                     ))}
@@ -884,7 +946,7 @@ export default function App() {
 
         {/* FAB — Journal shortcut */}
         {(view==="home"||view==="stats")&&(
-          <button onClick={()=>setView("log")} style={{position:"fixed",bottom:26,right:20,width:52,height:52,borderRadius:"50%",background:T.color,color:T.bg,border:"none",fontSize:22,cursor:"pointer",boxShadow:`0 0 28px ${T.color}66`,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif"}}>
+          <button onClick={()=>setView("log")} style={{position:"fixed",bottom:26,right:20,width:52,height:52,borderRadius:"50%",background:T.color,color:T.bg,border:"none",fontSize:24,cursor:"pointer",boxShadow:`0 0 28px ${T.color}66`,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif"}}>
             ✦
           </button>
         )}
