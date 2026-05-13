@@ -58,69 +58,89 @@ const EVENT_MAP = Object.fromEntries(EVENT_TYPES.map(e=>[e.key,e]));
 
 // ─── DAY GUIDE ────────────────────────────────────────────────────────────────
 const DAY_GUIDE = {
-  1:  {title:"First Light",           note:"Your bleeding has ended and a new cycle begins. Oestrogen starts its gentle rise. The heaviness lifts — you may feel lighter than you have in days.", energy:"Building steadily",          mood:"Optimistic, emerging, curious",            body:"Body feels lighter, skin begins to clear",                 ritual:"Try something new — a recipe, a walk, a podcast"},
-  2:  {title:"The Rising",            note:"Creative energy and motivation return. Your mind feels clearer. A wonderful day to begin something you've been putting off.",       energy:"Good and building",                 mood:"Motivated, clear-headed",                  body:"Energy increasing, digestion often improves",              ritual:"Start a new project or revisit an old goal"},
-  3:  {title:"Opening Up",            note:"Social energy returns. You may feel more talkative, warmer, more willing to reach out. Lean into connection.",                     energy:"Strong",                            mood:"Warm, sociable, expressive",               body:"Skin glowing, body feels capable",                         ritual:"Call a friend, make a plan, say yes to something"},
-  4:  {title:"Sharpening",            note:"Focus and cognitive clarity are heightened. Your brain is genuinely running differently — use it for anything requiring deep thought.", energy:"High and focused",              mood:"Confident, articulate",                    body:"Strong, capable, well-rested",                             ritual:"Tackle the hard task, write, strategise"},
-  5:  {title:"Full Bloom",            note:"Energy, mood and confidence are all rising together. Notice how different this feels from the days of bleeding.",                   energy:"Excellent",                         mood:"Positive, self-assured",                   body:"Peak physical readiness building",                         ritual:"Exercise, create, connect — you're thriving"},
-  6:  {title:"Creative Fire",         note:"Oestrogen boosts dopamine. Ideas flow easily today. This is a wonderful day for creative work of any kind.",                       energy:"High and inspired",                 mood:"Playful, imaginative",                     body:"Body responds well to movement and challenge",             ritual:"Make art, cook something beautiful, move your body"},
-  7:  {title:"The Rising",            note:"Creative energy and motivation return. Your mind feels sharper. A wonderful day to begin something you've been putting off.",      energy:"Good and building",                 mood:"Motivated, clear-headed",                  body:"Energy increasing, digestion often improves",              ritual:"Start a new project or revisit an old goal"},
-  8:  {title:"Opening Up",            note:"Social energy returns. You may feel more talkative, warmer, more willing to reach out. Lean into connection.",                     energy:"Strong",                            mood:"Warm, sociable, expressive",               body:"Skin glowing, body feels capable",                         ritual:"Call a friend, make a plan, say yes to something"},
-  9:  {title:"Sharpening",            note:"Focus and cognitive clarity are heightened. Your brain is genuinely running differently — use it for anything requiring deep thought.", energy:"High and focused",              mood:"Confident, articulate",                    body:"Strong, capable, well-rested",                             ritual:"Tackle the hard task, write, strategise"},
-  10: {title:"Full Bloom",            note:"Energy, mood and confidence are all rising together. Notice how different this feels from last week.",                              energy:"Excellent",                         mood:"Positive, self-assured",                   body:"Peak physical readiness building",                         ritual:"Exercise, create, connect — you're thriving"},
-  11: {title:"Creative Fire",         note:"Oestrogen boosts dopamine. Ideas flow easily today. This is a wonderful day for creative work of any kind.",                       energy:"High and inspired",                 mood:"Playful, imaginative",                     body:"Body responds well to movement and challenge",             ritual:"Make art, cook something beautiful, move your body"},
-  12: {title:"Pre-Ovulation Glow",    note:"The body prepares for ovulation. You may notice your presence feels magnetic, your skin luminous.",                               energy:"Very high",                         mood:"Radiant, confident, magnetic",             body:"Cervical fluid increasing, libido rising",                 ritual:"Schedule important conversations for this window"},
-  13: {title:"The Eve of Ovulation",  note:"LH is about to surge. Energy and confidence peak. You are at your most outwardly powerful — this is not coincidence.",            energy:"Peak",                              mood:"Bold, expressive, persuasive",             body:"High libido, cervical fluid clear and stretchy",           ritual:"Show up fully — this is your moment"},
-  14: {title:"Ovulation ✦",           note:"The egg is released. This is the apex of your cycle — biologically, emotionally, energetically. You are in full flower.",         energy:"Peak — radiant",                    mood:"Magnetic, open, deeply alive",             body:"Possible mild mid-cycle cramp — completely normal",        ritual:"Celebrate your body. Connect. Be seen."},
-  15: {title:"The Day After",         note:"Ovulation has passed. Energy remains high but begins its gradual arc toward stillness. Savour the brightness.",                   energy:"High, beginning to shift",          mood:"Warm, satisfied, present",                 body:"Temperature slightly elevated post-ovulation",             ritual:"Nourish yourself well — you've just done something remarkable"},
-  16: {title:"The Threshold",         note:"You stand between the two halves of your cycle. The outward phase ends; the inward phase begins. There is beauty in both.",       energy:"Moderate-high",                     mood:"Reflective, transitioning",                body:"Body shifting toward progesterone dominance",              ritual:"Notice the transition — journal, sit quietly, be present"},
-  17: {title:"Into the Luteal",       note:"Progesterone rises to support a potential pregnancy. Energy remains good for now — the shift is gradual.",                         energy:"Good",                              mood:"Steady, grounded",                         body:"Slight bloating may begin, breasts may feel fuller",       ritual:"Strength training, nourishing meals, good sleep"},
-  18: {title:"Inner Work",            note:"The luteal phase invites you inward. Your attention naturally moves from the external world to your inner landscape.",             energy:"Moderate",                          mood:"Thoughtful, less social",                  body:"Body temperature slightly higher than usual",              ritual:"Yoga, meditation, slow evening rituals"},
-  19: {title:"Nesting",               note:"You may feel drawn to your home and your inner circle. This is the progesterone speaking — it is not you shrinking.",              energy:"Moderate",                          mood:"Homebody, comfort-seeking",                body:"Appetite increasing, especially for carbs",                ritual:"Cook something nourishing, organise your space, cosy evening"},
-  20: {title:"Deep Knowing",          note:"Intuition sharpens in the luteal phase. The noise of the outward world quiets and something deeper becomes audible.",             energy:"Moderate, more internal",           mood:"Intuitive, perceptive",                    body:"Body wisdom is heightened",                                ritual:"Listen to your gut today — it knows things"},
-  21: {title:"The Slowdown",          note:"Energy begins its final descent. This is not failure — it is the natural exhale of a cycle that has given much.",                  energy:"Lowering",                          mood:"Quieter, less patient",                    body:"Fatigue possible, sleep may deepen",                       ritual:"Reduce commitments, prioritise rest"},
-  22: {title:"Tender Days",           note:"PMS may begin to arrive. Be gentle with yourself and others. What feels sharp today is largely hormonal — it will pass.",         energy:"Low-moderate",                      mood:"Sensitive, easily irritated",              body:"Bloating, breast tenderness, possible headaches",          ritual:"Magnesium, chamomile tea, say no to extra obligations"},
-  23: {title:"The Inner Storm",       note:"Serotonin is dropping. The feelings are real but amplified. Name them without being ruled by them.",                               energy:"Low",                               mood:"Emotionally heightened, tearful possible",  body:"PMS symptoms at their most noticeable",                    ritual:"Name what you feel — 'I'm in my luteal phase, this will pass'"},
-  24: {title:"Craving Comfort",       note:"Your body craves carbohydrates because they support serotonin. This is biology, not weakness. Feed yourself kindly.",              energy:"Low",                               mood:"Comfort-seeking, vulnerable",              body:"Strong food cravings, possible brain fog",                 ritual:"Sweet potato, oats, dark chocolate — nourish the need"},
-  25: {title:"Releasing",             note:"Something in you is ready to let go — an emotion, a thought pattern, something that no longer fits.",                              energy:"Very low",                          mood:"Cathartic, reflective",                     body:"Body feels heavy and full",                                ritual:"Write what you want to release. Burn it if that feels right."},
-  26: {title:"The Veil Thins",        note:"The days before menstruation are considered the most spiritually perceptive. Your intuition is at its sharpest.",                 energy:"Low but vivid",                     mood:"Psychic, dreamy, heightened",              body:"Dreams may be intense, sleep may be disrupted",            ritual:"Pay attention to dreams. Write them down."},
-  27: {title:"Almost",                note:"The cycle draws to its close. Your body knows what comes next. Rest as much as you can — prepare to begin again.",                energy:"Very low",                          mood:"Withdrawn, anticipatory",                  body:"Period may arrive soon",                                   ritual:"Prepare your comfort kit — heat pack, iron-rich food, rest"},
-  28: {title:"The Last Night",        note:"The final day of the cycle. Whatever this month held — grief, joy, difficulty, beauty — it is complete. Tomorrow, the wheel turns.", energy:"Lowest point",                   mood:"Inward, complete",                         body:"Period imminent",                                          ritual:"Rest. Acknowledge the full cycle. You did it."},
+  // ── MENSTRUAL PHASE (Days 1–5 approx) ─────────────────────────────────────
+  // Day 1 = first day of bleeding. Cycle begins. Follicular phase also begins today.
+  1:  {title:"Day One — Menstruation Begins",  note:"Today is Day 1 — the first day of your period and the start of a new cycle. Biologically, this is also Day 1 of the follicular phase, as both begin together. Oestrogen and progesterone are at their lowest. Your body is shedding the uterine lining — give it the rest it needs.",                energy:"Very low — rest is essential",       mood:"Introspective, tender, possibly emotional", body:"Cramping often strongest today. Heat and warmth help most.",         ritual:"Hot water bottle, dark chocolate, a slow morning"},
+  2:  {title:"Day Two — Deep Rest",             note:"Flow is often heaviest on Day 2. Your body is working hard. Cancel what you can. Iron-rich foods today help replace what you're losing.",                                                            energy:"Low — conserve everything",           mood:"Withdrawn, sensitive, raw",                body:"Heavy flow, possible back pain and fatigue",                         ritual:"Epsom salt bath, iron-rich foods, no obligations"},
+  3:  {title:"Day Three — The Turning",         note:"The sharpest discomfort often eases around Day 3. FSH is beginning to rise, quietly signalling the start of follicle development even while bleeding continues.",                                    energy:"Low but slightly steadier",            mood:"Quieter, more accepting",                  body:"Flow beginning to ease, cramping reducing",                          ritual:"Gentle stretching, ginger tea, journalling"},
+  4:  {title:"Day Four — Soft Shift",           note:"Oestrogen begins its gradual rise as follicles develop. You may notice the very first lift in energy — subtle, but real. Bleeding is easing.",                                                       energy:"Slowly returning",                    mood:"Clearer, more present",                    body:"Lighter flow, body feels less heavy",                                ritual:"Short walk, nourishing warm food, early sleep"},
+  5:  {title:"Day Five — Closing",              note:"Bleeding is ending or very light. The menstrual phase draws to a close. As oestrogen continues to rise, a quiet optimism often returns.",                                                            energy:"Moderate — beginning to rebuild",      mood:"Reflective, emerging",                     body:"Flow ending or spotting only",                                       ritual:"Set one small intention for the week ahead"},
+  // ── FOLLICULAR PHASE (Days 6–13 approx) ───────────────────────────────────
+  // Oestrogen rises steadily. One follicle becomes dominant. Energy builds.
+  6:  {title:"Day Six — First Light",           note:"Bleeding has ended. Oestrogen is rising steadily. One follicle is being selected to mature. You may feel noticeably lighter and more capable than you did a few days ago.",                         energy:"Building steadily",                   mood:"Optimistic, curious",                      body:"Body feels lighter, skin begins to clear",                           ritual:"Try something new — a recipe, a walk, a podcast"},
+  7:  {title:"Day Seven — The Rising",          note:"The dominant follicle is growing and producing oestrogen. Your brain responds — dopamine and serotonin lift. Energy, focus and motivation are all returning.",                                       energy:"Good and building",                   mood:"Motivated, clear-headed",                  body:"Energy increasing, digestion often improves",                        ritual:"Start a new project or revisit an old goal"},
+  8:  {title:"Day Eight — Opening Up",          note:"Social energy returns. Oestrogen boosts verbal fluency and interpersonal warmth. You may feel more talkative and genuinely interested in others.",                                                   energy:"Strong",                              mood:"Warm, sociable, expressive",               body:"Skin glowing, body feels capable",                                   ritual:"Call a friend, make a plan, say yes to something"},
+  9:  {title:"Day Nine — Sharpening",           note:"Oestrogen is near its first peak. Cognitive flexibility and working memory are measurably higher in the late follicular phase. Use it for anything requiring deep thought.",                          energy:"High and focused",                    mood:"Confident, articulate",                    body:"Strong, capable, well-rested",                                       ritual:"Tackle the hard task, write, strategise"},
+  10: {title:"Day Ten — Full Bloom",            note:"You're in the heart of the follicular phase. The dominant follicle is maturing. Oestrogen is rising toward its pre-ovulation peak. Energy, mood and confidence are building together.",              energy:"Excellent",                           mood:"Positive, self-assured",                   body:"Peak physical readiness building",                                   ritual:"Exercise, create, connect — you're thriving"},
+  11: {title:"Day Eleven — Creative Fire",      note:"Oestrogen's effect on dopamine is at its strongest. Ideas flow easily. Verbal expression, creativity and strategic thinking are all elevated. A wonderful day for any kind of creative work.",       energy:"High and inspired",                   mood:"Playful, imaginative",                     body:"Body responds well to movement and challenge",                       ritual:"Make art, cook something beautiful, move your body"},
+  12: {title:"Day Twelve — Pre-Ovulation Glow", note:"LH is beginning to surge. Oestrogen peaks. You may notice your presence feels magnetic — research confirms women's faces, voices and gait all subtly shift around ovulation.",                     energy:"Very high",                           mood:"Radiant, confident, magnetic",             body:"Cervical mucus clear and stretchy — fertile window",                 ritual:"Schedule important conversations for this window"},
+  13: {title:"Day Thirteen — The Eve",          note:"The LH surge is underway. Ovulation is imminent — likely within 24–36 hours. This is the peak of your fertile window. Energy and confidence are at their highest.",                                 energy:"Peak",                                mood:"Bold, expressive, persuasive",             body:"High libido, fertile cervical mucus",                                ritual:"Show up fully — this is your moment"},
+  // ── OVULATORY PHASE (Days 13–15 approx) ──────────────────────────────────
+  // LH surge triggers egg release ~36 hours later. Brief testosterone peak.
+  14: {title:"Day Fourteen — Ovulation ✦",      note:"Ovulation occurs today or within the next 24 hours. The mature egg is released from its follicle. This is the apex of your cycle — biologically, energetically, emotionally. You are in full flower.", energy:"Peak — radiant",                    mood:"Magnetic, open, deeply alive",             body:"Possible mild mid-cycle cramp (mittelschmerz) — normal",             ritual:"Celebrate your body. Connect. Be seen."},
+  15: {title:"Day Fifteen — After the Peak",    note:"Ovulation has occurred. The egg is now travelling toward the uterus. The follicle that released it becomes the corpus luteum and begins producing progesterone. A transition is beginning.",          energy:"High, beginning to shift",            mood:"Warm, satisfied, present",                 body:"Temperature slightly elevated — this confirms ovulation has occurred", ritual:"Nourish yourself well — you've just done something remarkable"},
+  // ── LUTEAL PHASE (Day 16 to next period) ─────────────────────────────────
+  // Progesterone rises. The most consistent phase — ~14 days in most cycles.
+  // If no pregnancy: progesterone and oestrogen both fall → period begins.
+  16: {title:"Day Sixteen — Into the Luteal",   note:"The luteal phase begins. Progesterone rises as the corpus luteum takes over. This phase lasts ~14 days in almost all cycle lengths — it's the most predictable part of your cycle.",              energy:"Good",                                mood:"Steady, grounded",                         body:"Slight bloating may begin, breasts may feel fuller",                 ritual:"Strength training, nourishing meals, good sleep"},
+  17: {title:"Day Seventeen — Nesting",         note:"Progesterone's calming, sedating effect begins to show. Your attention naturally moves inward. You may feel drawn to home, comfort and your closest people.",                                        energy:"Moderate",                            mood:"Homebody, comfort-seeking",                body:"Appetite increasing, especially for carbohydrates",                  ritual:"Cook something nourishing, organise your space, cosy evening"},
+  18: {title:"Day Eighteen — Inner Work",       note:"Progesterone continues to rise. The luteal phase is a time for consolidation — finishing things rather than starting them. Your inner life becomes more vivid.",                                     energy:"Moderate",                            mood:"Thoughtful, less social",                  body:"Body temperature slightly higher than usual",                        ritual:"Yoga, meditation, slow evening rituals"},
+  19: {title:"Day Nineteen — Deep Knowing",     note:"Intuition often sharpens in the luteal phase. The outward-facing energy of the follicular phase quiets, and something more internal and perceptive becomes available.",                              energy:"Moderate, more internal",             mood:"Intuitive, perceptive",                    body:"Body wisdom is heightened",                                          ritual:"Listen to your gut today — it knows things"},
+  20: {title:"Day Twenty — The Slowdown",       note:"If pregnancy hasn't occurred, the corpus luteum begins to break down. Progesterone starts its decline. Energy begins its final descent toward the next period.",                                     energy:"Lowering",                            mood:"Quieter, less patient",                    body:"Fatigue possible, sleep may deepen",                                 ritual:"Reduce commitments, prioritise rest"},
+  21: {title:"Day Twenty-One — Tender Days",    note:"Progesterone and oestrogen are both declining. Serotonin drops with them — this is the direct biological cause of PMS mood symptoms. What you feel is real and has a clear hormonal origin.",        energy:"Low-moderate",                        mood:"Sensitive, easily irritated",              body:"Bloating, breast tenderness, possible headaches",                    ritual:"Magnesium, chamomile tea, say no to extra obligations"},
+  22: {title:"Day Twenty-Two — The Inner Storm",note:"Serotonin continues to fall. Cortisol is also measurably higher in the late luteal phase. The combination of low serotonin and elevated cortisol explains irritability, anxiety and tearfulness.",   energy:"Low",                                 mood:"Emotionally heightened, tearful possible",  body:"PMS symptoms often at their most noticeable",                        ritual:"Name it — 'I'm in my luteal phase, this will pass'"},
+  23: {title:"Day Twenty-Three — Craving Comfort",note:"Carbohydrate cravings are driven by falling serotonin — carbs trigger a brief serotonin boost. This is your body self-medicating. Feed it complex carbs, not sugar, for more sustained relief.", energy:"Low",                                 mood:"Comfort-seeking, vulnerable",              body:"Strong food cravings, possible brain fog",                           ritual:"Sweet potato, oats, dark chocolate — nourish the need"},
+  24: {title:"Day Twenty-Four — Releasing",     note:"Progesterone is near its lowest pre-period level. Your body is preparing to shed the uterine lining. Emotionally, a sense of release or completion is common.",                                      energy:"Very low",                            mood:"Cathartic, reflective",                     body:"Body feels heavy and full",                                          ritual:"Write what you want to release this cycle"},
+  25: {title:"Day Twenty-Five — The Veil Thins",note:"In many traditions, the premenstrual days are considered the most spiritually perceptive. Scientifically, reduced progesterone is associated with more vivid dreams and heightened emotional sensitivity.", energy:"Low but vivid",                   mood:"Psychic, dreamy, heightened",              body:"Dreams may be intense, sleep may be disrupted",                      ritual:"Pay attention to dreams. Write them down."},
+  26: {title:"Day Twenty-Six — Almost",         note:"The uterine lining is fully prepared to shed. Prostaglandins are building — these are the compounds that will trigger uterine contractions when your period begins. Omega-3s help dampen their effect.", energy:"Very low",                          mood:"Withdrawn, anticipatory",                  body:"Cervix low and soft — period is close",                              ritual:"Prepare your comfort kit — heat pack, iron-rich food, rest"},
+  27: {title:"Day Twenty-Seven — The Last Day", note:"The final day before your period is likely to arrive. Oestrogen and progesterone are at their lowest. The uterus is ready. Tomorrow, everything begins again.",                                       energy:"Lowest point",                        mood:"Inward, complete",                         body:"Period imminent — cramping may begin",                               ritual:"Rest. Acknowledge everything this cycle held."},
+  28: {title:"Day Twenty-Eight — The Wheel Turns",note:"If your cycle is around 28 days, your period may begin today or tomorrow. If your cycle is longer, you may still be in the luteal phase — that's completely normal. The luteal phase is stable; the follicular phase varies.", energy:"Lowest point",                mood:"Inward, ready to begin",                   body:"Period imminent or beginning",                                       ritual:"Rest. The wheel turns again."},
+  // ── EXTENDED LUTEAL (Days 29–35) ────────────────────────────────────────────
+  // For cycles longer than 28 days. Luteal phase remains ~14 days;
+  // extra length comes from a longer follicular phase in the previous cycle.
+  // If still no period by Day 35, consider tracking and speaking with a GP.
+  29: {title:"Day Twenty-Nine — Still Here",     note:"Your cycle is running longer than 28 days — this is completely normal. Cycles between 21 and 35 days are clinically typical. The extra days are in your luteal phase, where progesterone continues to support the uterine lining.", energy:"Very low",    mood:"Waiting, inward",                          body:"PMS symptoms may persist; period has not yet arrived",               ritual:"Continue self-care — magnesium, warmth, rest"},
+  30: {title:"Day Thirty — The Long Cycle",      note:"A 30-day cycle is well within the normal range. Oestrogen and progesterone are low. Your body is ready to begin again — it's simply taking a little longer this cycle. Stay nourished and hydrated.",                                  energy:"Low",         mood:"Patient, quietly anticipatory",            body:"Uterine lining primed and ready to shed",                            ritual:"Nourishing soups, herbal tea, gentle movement"},
+  31: {title:"Day Thirty-One — Holding",         note:"Longer cycles are often driven by a longer follicular phase in the next cycle building up. The luteal phase itself is typically consistent. If this is unusual for you, note it in your journal.",                                    energy:"Low",         mood:"Reflective, a little restless",            body:"Period is close — body may feel heavy or full",                      ritual:"Note any changes from your usual cycle in your journal"},
+  32: {title:"Day Thirty-Two — Deep Pause",      note:"Your body is in the final stretch before menstruation. Prostaglandin levels are rising in the endometrium. Rest and warmth support your body through this extended luteal hold.",                                                    energy:"Very low",    mood:"Withdrawn, tired of waiting",              body:"Cramping or spotting may begin as a sign the period is coming",      ritual:"Heat pack, iron-rich foods, prepare your comfort kit"},
+  33: {title:"Day Thirty-Three — Almost There",  note:"Cycles of 33 days are entirely normal. Progesterone is declining. The uterine lining is ready. Your period is very close — within the next day or two in most cases.",                                                              energy:"Very low",    mood:"Inward, ready",                            body:"Period imminent — spotting or light cramping likely",                ritual:"Rest fully. The cycle is nearly complete."},
+  34: {title:"Day Thirty-Four — The Final Wait", note:"You are in the very late luteal phase. Progesterone and oestrogen have fallen to their lowest. If your period hasn't begun, it is likely just hours away. Longer cycles are normal and vary month to month.",                        energy:"Lowest point", mood:"Complete, anticipatory",                  body:"Period imminent",                                                    ritual:"Warmth, rest, and patience — it is coming"},
+  35: {title:"Day Thirty-Five — The Edge",       note:"Day 35 is the upper end of a clinically normal cycle length. If your period hasn't arrived and this is unusual for your pattern, it's worth noting. Stress, illness, travel and significant weight changes can all delay ovulation and extend the follicular phase.", energy:"Lowest point", mood:"Watchful, ready to begin again",         body:"Period due — if absent and unusual, note for your GP",               ritual:"Track this cycle carefully. Speak to your GP if concerned."},
 };
 
 // ─── PHASES ───────────────────────────────────────────────────────────────────
 const PHASES = {
   menstrual: {
-    name:"Menstrual", days:"Days 1–5", emoji:"🌑", tagline:"The dark moon within",
+    name:"Menstrual", days:"Days 1–5 approx", emoji:"🌑", tagline:"The dark moon within",
     color:"#E8A0B0", bg:"#150E18", cardBg:"#1E1424", textColor:"#F8EEF2", mutedColor:"#C8B0BC",
-    description:"Your body sheds what it no longer needs. Oestrogen and progesterone are at their lowest. This phase ends when bleeding stops — that's when your new cycle begins. A time of deep rest, inward wisdom and sacred release.",
+    description:"Your body sheds its uterine lining as oestrogen and progesterone fall to their lowest. Cycle Day 1 is the first day of bleeding. This phase typically lasts 3–7 days and overlaps with the early follicular phase — both are happening simultaneously.",
     symptoms:["Cramping & lower back pain","Deep fatigue","Bloating & heaviness","Headaches from hormone drop","Deep introspection","Heightened emotional sensitivity"],
     foods:[{item:"Dark leafy greens — spinach, kale",reason:"Replenish iron lost through bleeding"},{item:"Red meat, lentils & beans",reason:"Iron-rich foods prevent anaemia and fatigue"},{item:"Dark chocolate 70%+",reason:"Magnesium eases cramps and genuinely lifts mood"},{item:"Oily fish — salmon, sardines",reason:"Omega-3s reduce the prostaglandins that cause cramping"},{item:"Warming soups & broths",reason:"Easy to digest, comforting and deeply hydrating"},{item:"Ginger & turmeric tea",reason:"Anti-inflammatory — reduces cramping severity"}],
     supplements:[{item:"Magnesium glycinate 300–400mg",reason:"Reduces cramps, bloating and improves sleep quality"},{item:"Omega-3 / fish oil",reason:"Reduces prostaglandins that drive cramping pain"},{item:"Iron + Vitamin C",reason:"Replenish iron lost — Vit C doubles absorption"},{item:"Vitamin B1 (Thiamine)",reason:"Clinical studies show significant reduction in period pain"}],
     selfCare:[{tip:"Heat pack on lower abdomen or back",why:"Relaxes uterine muscles and triggers endorphins — as effective as ibuprofen for mild cramps (Mayo Clinic)"},{tip:"Warm bath with Epsom salts",why:"Magnesium absorbs through skin while warmth eases full-body tension"},{tip:"Gentle yoga, stretching or slow walking",why:"Releases endorphins naturally. Even 15 minutes shifts pain."},{tip:"Ibuprofen — start at the first sign",why:"Most effective before pain peaks, not after (ACOG)"},{tip:"Rest without guilt",why:"Your body is doing significant work. This is maintenance, not laziness."},{tip:"Reduce caffeine & alcohol",why:"Both worsen bloating, sleep and cramping sensitivity"}],
   },
   follicular: {
-    name:"Follicular", days:"Days 6–13", emoji:"🌒", tagline:"Seeds stir beneath the soil",
+    name:"Follicular", days:"Days 1–13 approx", emoji:"🌒", tagline:"Seeds stir beneath the soil",
     color:"#90D0A8", bg:"#0E1612", cardBg:"#141E18", textColor:"#EEF8F2", mutedColor:"#A8C8B4",
-    description:"Bleeding has ended and your cycle begins here. Oestrogen rises as follicles develop. Energy, mood and creativity return. Your mind is sharp and your body capable. The world opens again.",
+    description:"The follicular phase begins on Day 1 — the same day bleeding starts — and runs until ovulation (~Day 13). Oestrogen rises as one follicle matures. As bleeding ends, energy and mood lift progressively. This phase is variable in length: shorter cycles have a shorter follicular phase; the luteal phase remains ~14 days regardless.",
     symptoms:["Rising energy and motivation","Improved mood and optimism","Sharper focus and thinking","Greater desire to socialise","Skin clearing and brightening","Physical stamina increasing"],
     foods:[{item:"Eggs & quality protein",reason:"Support follicle development and sustained energy"},{item:"Fermented foods — yoghurt, kefir, kimchi",reason:"Gut health regulates oestrogen metabolism"},{item:"Broccoli & cruciferous vegetables",reason:"Support liver clearance of used oestrogen"},{item:"Flaxseeds & pumpkin seeds",reason:"Phytoestrogens gently support rising oestrogen"},{item:"Berries & citrus",reason:"Antioxidants protect developing follicles"},{item:"Whole grains — oats, quinoa",reason:"Steady energy as vitality builds"}],
     supplements:[{item:"Vitamin D3 1000–2000 IU",reason:"Supports follicle development, hormone signalling and mood"},{item:"B-vitamin complex (esp. B6)",reason:"Energy metabolism and mood neurotransmitter production"},{item:"Zinc 15–25mg",reason:"Supports follicular development and skin clarity"},{item:"Probiotic",reason:"Gut bacteria that regulate oestrogen levels"}],
     selfCare:[{tip:"Begin something new",why:"Oestrogen boosts dopamine — your brain is wired for novelty right now"},{tip:"Increase exercise intensity",why:"Energy is building — great phase for strength training or a new class"},{tip:"Schedule social plans",why:"You're naturally more outgoing and articulate this week"},{tip:"Spend time in natural light",why:"Amplifies the natural serotonin lift of this phase"},{tip:"Strategic and creative work",why:"Cognitive flexibility is measurably higher in the follicular phase"}],
   },
   ovulatory: {
-    name:"Ovulatory", days:"Days 14–16", emoji:"🌕", tagline:"Full moon rising",
+    name:"Ovulatory", days:"Days 13–15 approx", emoji:"🌕", tagline:"Full moon rising",
     color:"#E0C880", bg:"#181410", cardBg:"#221C0E", textColor:"#F8F4E8", mutedColor:"#C8BC90",
-    description:"A surge in LH releases the egg. Oestrogen peaks and testosterone rises. You are at your most radiant, magnetic and alive. The full moon of your cycle.",
+    description:"A surge in LH triggers the release of a mature egg — typically around Day 13–14 in a 28-day cycle, but earlier in shorter cycles and later in longer ones. Ovulation occurs approximately 14 days before the next period regardless of total cycle length. Oestrogen peaks and testosterone rises briefly.",
     symptoms:["Peak energy and confidence","Heightened libido","Possible mid-cycle cramping (mittelschmerz)","Cervical fluid clear and stretchy","Heightened senses","Magnetic social presence"],
     foods:[{item:"Leafy greens & raw salads",reason:"Support liver clearance of declining oestrogen"},{item:"High-fibre foods",reason:"Bind and eliminate used hormones efficiently"},{item:"Light proteins — fish, tofu, chicken",reason:"Sustain peak energy without heaviness"},{item:"Avocado & olive oil",reason:"Healthy fats support continued hormone production"},{item:"Tomatoes & red peppers",reason:"Lycopene and Vit C support egg quality"},{item:"Coconut water",reason:"Electrolytes for peak physical performance"}],
     supplements:[{item:"CoQ10 100–200mg",reason:"Supports egg quality and cellular energy"},{item:"Vitamin C 500–1000mg",reason:"Antioxidant protection, supports luteal transition"},{item:"Selenium 55–100mcg",reason:"Antioxidant shown to protect egg quality"},{item:"Continue Vitamin D3 & Zinc",reason:"Ongoing hormone and reproductive health support"}],
     selfCare:[{tip:"Schedule important conversations",why:"Verbal fluency and confidence peak at ovulation — use this window"},{tip:"High-intensity exercise",why:"Peak energy and pain tolerance — your best week for challenge"},{tip:"Prioritise intimacy and connection",why:"Libido and oxytocin are elevated — lean in"},{tip:"Hydrate generously",why:"High energy expenditure — hydration supports mood and performance"},{tip:"Don't overcommit",why:"The luteal phase is coming — balance now protects you later"}],
   },
   luteal: {
-    name:"Luteal", days:"Days 17–28", emoji:"🌖", tagline:"The moon draws inward",
+    name:"Luteal", days:"Day 16 to next period", emoji:"🌖", tagline:"The moon draws inward",
     color:"#C4A8E0", bg:"#120E1A", cardBg:"#1A1424", textColor:"#F2EEF8", mutedColor:"#B8A8CC",
-    description:"Progesterone rises then falls. Serotonin drops. Your body and mind turn inward. This is not malfunction — it is the necessary counterweight to the brightness that came before.",
+    description:"The luteal phase begins after ovulation and ends when your next period starts. It is the most consistent phase — typically 14 days regardless of your total cycle length. Progesterone rises to support a potential pregnancy, then falls if one doesn't occur. This progesterone drop reduces serotonin, explaining PMS mood symptoms.",
     symptoms:["Bloating & water retention","Breast tenderness","Mood changes — irritability or tearfulness","Food cravings, especially carbs","Fatigue & disrupted sleep","Brain fog & reduced focus"],
     foods:[{item:"Complex carbohydrates — sweet potato, oats",reason:"Stabilise blood sugar and support serotonin"},{item:"Turkey, chicken & salmon",reason:"Tryptophan supports serotonin production"},{item:"Sesame & sunflower seeds",reason:"Support progesterone production"},{item:"Calcium-rich foods — dairy, almonds, sardines",reason:"RCTs show calcium reduces PMS symptoms significantly"},{item:"Dark chocolate & nuts",reason:"Magnesium reduces PMS bloating, cramps and anxiety"},{item:"Chamomile or passionflower tea",reason:"Natural support for sleep disruption and anxiety"}],
     supplements:[{item:"Magnesium glycinate 400mg",reason:"Most evidenced PMS supplement — reduces mood swings, cramps and bloating"},{item:"Calcium carbonate 1000–1200mg",reason:"RCTs show ~50% reduction in overall PMS severity"},{item:"Vitamin B6 50mg",reason:"Supports serotonin and progesterone — reduces mood symptoms"},{item:"Chasteberry / Vitex agnus-castus",reason:"Evidence for reducing PMS and breast pain — consult doctor first"}],
@@ -136,13 +156,24 @@ const AGE_INFO = {
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const AVG_CYCLE = 28;
-// Cycle day 1 = first day after period_end.
-// Days 1–8:   Follicular
-// Days 9–11:  Ovulatory
-// Day 12+:    Luteal (open-ended — ends when next period_start is logged)
-// Menstrual:  Driven by active period_start/end events, not day number.
-function getPhaseKey(d) { if(d<=8)return"follicular"; if(d<=11)return"ovulatory"; return"luteal"; }
-function todayStr() { return new Date().toISOString().slice(0,10); }
+// Cycle Day 1 = first day of bleeding (period_start). Clinically standard (UCSF, ACOG, StatPearls).
+// Menstrual:  Days 1–5 approx (active bleeding — overridden by isActiveBleeding in derived state)
+// Follicular: Day 1 through ~Day 13 (variable — luteal phase is the stable ~14 days, NCBI NBK279054)
+// Ovulatory:  Days 13–15 (~3-day window around ovulation)
+// Luteal:     Day 16+ until next period_start. Relatively constant ~14 days across cycle lengths.
+function getPhaseKey(d) {
+  if(d<=13) return "follicular"; // includes menstrual overlap — overridden by isActiveBleeding
+  if(d<=15) return "ovulatory";
+  return "luteal";
+}
+function todayStr() {
+  // Use local date, not UTC — important for NZ which is UTC+12/+13
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 function fmtFull(str) { return new Date(str+"T12:00:00").toLocaleDateString("en-NZ",{weekday:"short",day:"numeric",month:"short",year:"numeric"}); }
 function fmtShort(str) { if(!str)return""; return new Date(str+"T12:00:00").toLocaleDateString("en-NZ",{day:"numeric",month:"short",year:"numeric"}); }
 function fmtDisplay(d) { return new Date(d).toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"}); }
@@ -177,9 +208,6 @@ function buildCycleGroups(events) {
 
     // Days bleeding = period_start to period_end inclusive
     const daysBleeding = periodEnd ? daysBetween(cycleStart, periodEnd) : null;
-
-    // Follicular day 1 = day after period_end
-    const follicularStart = periodEnd ? addDays(periodEnd, 1) : null;
 
     // All events within this group
     const groupEvents = events
@@ -252,23 +280,24 @@ export default function App() {
   // Keep localStorage as a fast local cache
   useEffect(()=>{ try{localStorage.setItem("ct_ev4",JSON.stringify(events))}catch{} },[events]);
 
-  // ── Derived ──
-  // Cycle day 1 = day after last period_end (or first period_start if no end logged)
-  // ── Phase & cycle day logic ─────────────────────────────────────────────────
-  // Menstrual  = period_start logged with no period_end yet, or today is between start & end
-  // Follicular = Day 1–8  after period_end
-  // Ovulatory  = Day 9–11 after period_end
-  // Luteal     = Day 12+  until the next period_start is logged (flexible length)
+  // ── Phase & cycle day logic ──────────────────────────────────────────────────
+  // Clinical standard (UCSF CRH, ACOG, StatPearls NBK279054, NBK500020):
+  // • Cycle Day 1 = first day of menstrual bleeding (period_start)
+  // • Menstrual phase: Days 1–~5 (bleeding days, overlaps with follicular)
+  // • Follicular phase: Day 1 → ovulation (~Day 13–14). Variable length.
+  // • Ovulatory: ~3-day window around ovulation (~Days 13–15 for 28-day cycle)
+  // • Luteal phase: ovulation → next period_start. Relatively stable ~14 days.
+  // • Cycle length variability comes from follicular phase, NOT luteal (NCBI NBK279054)
 
   const today = todayStr();
 
-  // Most recent period_start
+  // Most recent period_start — this is Cycle Day 1
   const lastStart = (() => {
     const s = events.filter(e=>e.type==="period_start").sort((a,b)=>b.date.localeCompare(a.date));
     return s.length ? s[0].date : null;
   })();
 
-  // Most recent period_end that comes after lastStart
+  // Most recent period_end after lastStart
   const lastEnd = (() => {
     if(!lastStart) return null;
     const e = events.filter(e=>e.type==="period_end" && e.date >= lastStart).sort((a,b)=>b.date.localeCompare(a.date));
@@ -278,30 +307,29 @@ export default function App() {
   // Is today an active bleeding day?
   const isActiveBleeding = (() => {
     if(!lastStart || lastStart > today) return false;
-    if(!lastEnd) return true;           // started, no end logged yet
-    return today <= lastEnd;            // today within start→end window
+    if(!lastEnd) return true;        // period started, no end logged yet
+    return today <= lastEnd;         // today within start→end window
   })();
 
-  // Cycle day 1 = day after period_end (follicular begins)
-  // If no period_end logged yet, no cycle day to show
-  const cycleStartDate = lastEnd ? addDays(lastEnd, 1) : null;
-
+  // Cycle day: counted from period_start (Day 1 = first day of bleeding)
+  const cycleStartDate = lastStart || null;
   const doc = (() => {
     if(!cycleStartDate) return null;
     const s=new Date(cycleStartDate+"T12:00:00"), t=new Date();
     t.setHours(12,0,0,0);
     const diff = Math.floor((t-s)/86400000)+1;
-    return diff > 0 ? diff : null; // no modulo — cycle length is open-ended
+    return diff > 0 ? diff : null;
   })();
 
-  // Phase: menstrual overrides everything during active bleeding
+  // Phase determination — menstrual overrides follicular during active bleeding
   const curKey = (() => {
+    if(!doc && !lastStart) return null;
     if(isActiveBleeding) return "menstrual";
-    if(!doc) return lastStart ? "luteal" : null; // bleeding started, no end yet — still luteal until bleed confirmed
+    if(!doc) return null;
     return getPhaseKey(doc);
   })();
   const cur   = curKey ? PHASES[curKey] : null;
-  const guide = doc ? DAY_GUIDE[Math.min(doc, 28)] : (isActiveBleeding ? DAY_GUIDE[28] : null);
+  const guide = doc ? DAY_GUIDE[Math.min(doc, 35)] : null;
   const moon   = getMoonPhase(new Date());
 
   // Predict next period: based on lastStart + AVG_CYCLE
@@ -521,20 +549,24 @@ export default function App() {
                 </div>
               ):(<>
                 {/* Moon + Day */}
-                <div style={{...card(),display:"flex",gap:16,alignItems:"flex-start"}}>
-                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,minWidth:78}}>
-                    <MoonImage phase={moon.svg} size={90}/>
-                    <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:1.5,textTransform:"uppercase",color:T.color,textAlign:"center",opacity:.85,lineHeight:1.4}}>{moon.name}</p>
-                  </div>
-                  <div style={{flex:1}}>
-                    <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:3}}>
-                      <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8}}>Day</span>
-                      <span style={{fontSize:30,color:T.color,fontWeight:300,lineHeight:1}}>{doc}</span>
-                      <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.8}}>of ~28</span>
+                <div style={card()}>
+                  {/* Top row: moon image + day number + title */}
+                  <div style={{display:"flex",gap:16,alignItems:"center",marginBottom:16}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,flexShrink:0}}>
+                      <MoonImage phase={moon.svg} size={80}/>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:1.5,textTransform:"uppercase",color:T.color,textAlign:"center",opacity:.85,lineHeight:1.4}}>{moon.name}</p>
                     </div>
-                    <h3 style={{fontSize:22,fontWeight:400,fontStyle:"italic",color:T.textColor,marginBottom:6}}>{guide?.title}</h3>
-                    <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.7}}>{guide?.note}</p>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4}}>
+                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8}}>Day</span>
+                        <span style={{fontSize:34,color:T.color,fontWeight:300,lineHeight:1}}>{doc}</span>
+                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.8}}>of ~28</span>
+                      </div>
+                      <h3 style={{fontSize:20,fontWeight:400,fontStyle:"italic",color:T.textColor,lineHeight:1.3}}>{guide?.title}</h3>
+                    </div>
                   </div>
+                  {/* Full width description below */}
+                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.75,borderTop:`1px solid ${T.color}18`,paddingTop:14}}>{guide?.note}</p>
                 </div>
 
                 {/* Moon description */}
