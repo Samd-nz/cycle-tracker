@@ -73,10 +73,10 @@ const DAY_GUIDE = {
   9:  {title:"Day Nine — Sharpening",           note:"Oestrogen is near its first peak. Cognitive flexibility and working memory are measurably higher in the late follicular phase. Use it for anything requiring deep thought.",                          energy:"High and focused",                    mood:"Confident, articulate",                    body:"Strong, capable, well-rested",                                       ritual:"Tackle the hard task, write, strategise"},
   10: {title:"Day Ten — Full Bloom",            note:"You're in the heart of the follicular phase. The dominant follicle is maturing. Oestrogen is rising toward its pre-ovulation peak. Energy, mood and confidence are building together.",              energy:"Excellent",                           mood:"Positive, self-assured",                   body:"Peak physical readiness building",                                   ritual:"Exercise, create, connect — you're thriving"},
   11: {title:"Day Eleven — Creative Fire",      note:"Oestrogen's effect on dopamine is at its strongest. Ideas flow easily. Verbal expression, creativity and strategic thinking are all elevated. A wonderful day for any kind of creative work.",       energy:"High and inspired",                   mood:"Playful, imaginative",                     body:"Body responds well to movement and challenge",                       ritual:"Make art, cook something beautiful, move your body"},
-  12: {title:"Day Twelve — Pre-Ovulation Glow", note:"LH is beginning to surge. Oestrogen peaks. You may notice your presence feels magnetic — research confirms women's faces, voices and gait all subtly shift around ovulation.",                     energy:"Very high",                           mood:"Radiant, confident, magnetic",             body:"Cervical mucus clear and stretchy — fertile window",                 ritual:"Schedule important conversations for this window"},
-  13: {title:"Day Thirteen — The Eve",          note:"The LH surge is underway. Ovulation is imminent — likely within 24–36 hours. This is the peak of your fertile window. Energy and confidence are at their highest.",                                 energy:"Peak",                                mood:"Bold, expressive, persuasive",             body:"High libido, fertile cervical mucus",                                ritual:"Show up fully — this is your moment"},
+  12: {title:"Day Twelve — Pre-Ovulation Glow", note:"Luteinising hormone (LH) is beginning to surge. Oestrogen peaks. You may notice your presence feels magnetic — research confirms women's faces, voices and gait all subtly shift around ovulation.",                     energy:"Very high",                           mood:"Radiant, confident, magnetic",             body:"Cervical mucus clear and stretchy — fertile window",                 ritual:"Schedule important conversations for this window"},
+  13: {title:"Day Thirteen — The Eve",          note:"The luteinising hormone (LH) surge is underway. Ovulation is imminent — likely within 24–36 hours. This is the peak of your fertile window. Energy and confidence are at their highest.",                                 energy:"Peak",                                mood:"Bold, expressive, persuasive",             body:"High libido, fertile cervical mucus",                                ritual:"Show up fully — this is your moment"},
   // ── OVULATORY PHASE (Days 13–15 approx) ──────────────────────────────────
-  // LH surge triggers egg release ~36 hours later. Brief testosterone peak.
+  // Luteinising hormone (LH) surge triggers egg release ~36 hours later. Brief testosterone peak.
   14: {title:"Day Fourteen — Ovulation ✦",      note:"Ovulation occurs today or within the next 24 hours. The mature egg is released from its follicle. This is the apex of your cycle — biologically, energetically, emotionally. You are in full flower.", energy:"Peak — radiant",                    mood:"Magnetic, open, deeply alive",             body:"Possible mild mid-cycle cramp (mittelschmerz) — normal",             ritual:"Celebrate your body. Connect. Be seen."},
   15: {title:"Day Fifteen — After the Peak",    note:"Ovulation has occurred. The egg is now travelling toward the uterus. The follicle that released it becomes the corpus luteum and begins producing progesterone. A transition is beginning.",          energy:"High, beginning to shift",            mood:"Warm, satisfied, present",                 body:"Temperature slightly elevated — this confirms ovulation has occurred", ritual:"Nourish yourself well — you've just done something remarkable"},
   // ── LUTEAL PHASE (Day 16 to next period) ─────────────────────────────────
@@ -131,7 +131,7 @@ const PHASES = {
   ovulatory: {
     name:"Ovulatory", days:"Days 13–15 approx", emoji:"🌕", tagline:"Full moon rising",
     color:"#E0C880", bg:"#181410", cardBg:"#221C0E", textColor:"#F8F4E8", mutedColor:"#C8BC90",
-    description:"A surge in LH triggers the release of a mature egg — typically around Day 13–14 in a 28-day cycle, but earlier in shorter cycles and later in longer ones. Ovulation occurs approximately 14 days before the next period regardless of total cycle length. Oestrogen peaks and testosterone rises briefly.",
+    description:"A surge in luteinising hormone (LH) triggers the release of a mature egg — typically around Day 13–14 in a 28-day cycle, but earlier in shorter cycles and later in longer ones. Ovulation occurs approximately 14 days before the next period regardless of total cycle length. Oestrogen peaks and testosterone rises briefly.",
     symptoms:["Peak energy and confidence","Heightened libido","Possible mid-cycle cramping (mittelschmerz)","Cervical fluid clear and stretchy","Heightened senses","Magnetic social presence"],
     foods:[{item:"Leafy greens & raw salads",reason:"Support liver clearance of declining oestrogen"},{item:"High-fibre foods",reason:"Bind and eliminate used hormones efficiently"},{item:"Light proteins — fish, tofu, chicken",reason:"Sustain peak energy without heaviness"},{item:"Avocado & olive oil",reason:"Healthy fats support continued hormone production"},{item:"Tomatoes & red peppers",reason:"Lycopene and Vit C support egg quality"},{item:"Coconut water",reason:"Electrolytes for peak physical performance"}],
     supplements:[{item:"CoQ10 100–200mg",reason:"Supports egg quality and cellular energy"},{item:"Vitamin C 500–1000mg",reason:"Antioxidant protection, supports luteal transition"},{item:"Selenium 55–100mcg",reason:"Antioxidant shown to protect egg quality"},{item:"Continue Vitamin D3 & Zinc",reason:"Ongoing hormone and reproductive health support"}],
@@ -550,29 +550,27 @@ export default function App() {
               ):(<>
                 {/* Moon + Day */}
                 <div style={card()}>
-                  {/* Top row: moon image + day number + title */}
+                  {/* Top row: moon image + day title */}
                   <div style={{display:"flex",gap:16,alignItems:"center",marginBottom:16}}>
                     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,flexShrink:0}}>
                       <MoonImage phase={moon.svg} size={80}/>
                       <p style={{fontFamily:"'Raleway',sans-serif",fontSize:11,letterSpacing:1.5,textTransform:"uppercase",color:T.color,textAlign:"center",opacity:.85,lineHeight:1.4}}>{moon.name}</p>
                     </div>
                     <div style={{flex:1}}>
-                      <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4}}>
-                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.8}}>Day</span>
-                        <span style={{fontSize:34,color:T.color,fontWeight:300,lineHeight:1}}>{doc}</span>
-                        <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.8}}>of ~28</span>
-                      </div>
-                      <h3 style={{fontSize:20,fontWeight:400,fontStyle:"italic",color:T.textColor,lineHeight:1.3}}>{guide?.title}</h3>
+                      <h3 style={{fontSize:26,fontWeight:300,fontStyle:"italic",color:T.color,lineHeight:1.15,marginBottom:6}}>
+                        {guide?.title?.replace(/^Day \w+[\s—]+/,'')}
+                      </h3>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.9,letterSpacing:.5}}>{guide?.title?.match(/^Day \w+/)?.[0]}</p>
                     </div>
                   </div>
                   {/* Full width description below */}
-                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.75,borderTop:`1px solid ${T.color}18`,paddingTop:14}}>{guide?.note}</p>
+                  <p style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.75,borderTop:`1px solid ${T.color}18`,paddingTop:14,textAlign:"justify"}}>{guide?.note}</p>
                 </div>
 
                 {/* Moon description */}
                 <div style={{...card(),padding:"13px 18px"}}>
                   <span style={sl}>Tonight's Moon</span>
-                  <p style={{fontSize:18,fontStyle:"italic",color:T.mutedColor,lineHeight:1.7}}>{moon.description}</p>
+                  <p style={{fontSize:18,fontStyle:"italic",color:T.mutedColor,lineHeight:1.7,textAlign:"justify"}}>{moon.description}</p>
                 </div>
 
                 {/* Today's energy */}
@@ -595,7 +593,7 @@ export default function App() {
                 {/* Phase overview */}
                 <div style={card()}>
                   <span style={sl}>{cur.name} phase · {cur.days}</span>
-                  <p style={{fontSize:18,fontStyle:"italic",color:T.mutedColor,lineHeight:1.8,marginBottom:14}}>{cur.description}</p>
+                  <p style={{fontSize:18,fontStyle:"italic",color:T.mutedColor,lineHeight:1.8,marginBottom:14,textAlign:"justify"}}>{cur.description}</p>
                   <button onClick={()=>{setActivePhase(curKey);setPhaseTab("care");setView("phase")}} style={{background:"none",border:`1px solid ${T.color}55`,borderRadius:100,padding:"7px 18px",color:T.color,fontFamily:"'Raleway',sans-serif",fontSize:14,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Full phase guide →</button>
                 </div>
 
@@ -924,7 +922,7 @@ export default function App() {
                   <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:disp.mutedColor,letterSpacing:1.5,marginTop:4}}>{disp.days}</p>
                 </div>
                 <div style={{background:disp.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${disp.color}28`}}>
-                  <p style={{fontSize:19,fontStyle:"italic",color:disp.mutedColor,lineHeight:1.85}}>{disp.description}</p>
+                  <p style={{fontSize:19,fontStyle:"italic",color:disp.mutedColor,lineHeight:1.85,textAlign:"justify"}}>{disp.description}</p>
                 </div>
                 <div style={{background:disp.cardBg,borderRadius:16,padding:"18px",marginBottom:12,border:`1px solid ${disp.color}28`}}>
                   <span style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2.8,textTransform:"uppercase",color:disp.color,opacity:.8,marginBottom:12,display:"block"}}>What to expect</span>
