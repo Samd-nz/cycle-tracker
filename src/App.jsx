@@ -47,7 +47,7 @@ function MoonImage({ phase, size = 90 }) {
 
 // ─── EVENT TYPES ──────────────────────────────────────────────────────────────
 const EVENT_TYPES = [
-  { key:"period_start",        label:"First day of bleeding",    emoji:"🩸", note:"Marks the start of your period and a new cycle",  color:"#E8A0B0" },
+  { key:"period_start",        label:"First day of bleeding",    emoji:"🩸", note:"Log this on the first day of full, active red flow — not spotting. Spotting before your period belongs to the previous cycle.",  color:"#E8A0B0" },
   { key:"period_end",          label:"Last day of bleeding",     emoji:"🌙", note:"Your period has ended",                           color:"#C4A8E0" },
   { key:"spotting",            label:"Spotting",                 emoji:"💧", note:"Light spotting outside your period",              color:"#E0C880" },
   { key:"heavy",               label:"Heavy bleeding",           emoji:"🌊", note:"Heavier than usual flow today",                   color:"#E07080" },
@@ -209,12 +209,25 @@ function buildCycleGroups(events) {
     // Days bleeding = period_start to period_end inclusive
     const daysBleeding = periodEnd ? daysBetween(cycleStart, periodEnd) : null;
 
+    // Days spotting = first spotting event before period_start to the day before period_start
+    const firstSpotting = (() => {
+      // Find spotting events in the window before this cycle's period_start
+      // i.e. after the previous period_end (or beginning of time) up to period_start
+      const prevEnd = i > 0 ? ends.find(e => e >= starts[i-1] && e < cycleStart) : null;
+      const windowStart = prevEnd ? addDays(prevEnd, 1) : '0000-00-00';
+      const spottingEvents = events
+        .filter(e => e.type === 'spotting' && e.date >= windowStart && e.date < cycleStart)
+        .sort((a,b) => a.date.localeCompare(b.date));
+      return spottingEvents.length ? spottingEvents[0].date : null;
+    })();
+    const daysSpotting = firstSpotting ? daysBetween(firstSpotting, addDays(cycleStart, -1)) : null;
+
     // All events within this group
     const groupEvents = events
       .filter(e=>e.date>=cycleStart && e.date<=groupEnd)
       .sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
 
-    groups.push({ cycleStart, periodEnd, groupEnd, cycleLength, daysBleeding, events:groupEvents, isCurrent:!nextStart });
+    groups.push({ cycleStart, periodEnd, groupEnd, cycleLength, daysBleeding, daysSpotting, events:groupEvents, isCurrent:!nextStart });
   }
   // Most recent first
   return groups.reverse();
@@ -558,9 +571,9 @@ export default function App() {
                     </div>
                     <div style={{flex:1}}>
                       <h3 style={{fontSize:26,fontWeight:300,fontStyle:"italic",color:T.color,lineHeight:1.15,marginBottom:6}}>
-                        {guide?.title?.replace(/^Day \w+[\s—]+/,'')}
+                        {guide?.title?.replace(/^Day[\w\s-]+—\s*/,'')}
                       </h3>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.9,letterSpacing:.5}}>{guide?.title?.match(/^Day \w+/)?.[0]}</p>
+                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,color:T.mutedColor,opacity:.9,letterSpacing:.5}}>{guide?.title?.match(/^Day[\w\s-]+(?=\s*—)/)?.[0]?.trim()}</p>
                     </div>
                   </div>
                   {/* Full width description below */}
@@ -583,10 +596,7 @@ export default function App() {
                         <span style={{fontFamily:"'Raleway',sans-serif",fontSize:16,color:T.mutedColor,lineHeight:1.6,flex:1}}>{val}</span>
                       </div>
                     ))}
-                    <div style={{marginTop:14,padding:"12px 14px",background:T.color+"18",borderRadius:10,borderLeft:`2px solid ${T.color}66`}}>
-                      <p style={{fontFamily:"'Raleway',sans-serif",fontSize:13,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.85,marginBottom:5}}>Today's ritual</p>
-                      <p style={{fontSize:18,fontStyle:"italic",color:T.textColor,lineHeight:1.5}}>{guide.ritual}</p>
-                    </div>
+
                   </div>
                 )}
 
@@ -683,6 +693,12 @@ export default function App() {
                               <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Days bleeding</p>
                               <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:group.daysBleeding?T.textColor:T.mutedColor}}>
                                 {group.daysBleeding?`${group.daysBleeding} days`:"Not logged"}
+                              </p>
+                            </div>
+                            <div>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:12,letterSpacing:2,textTransform:"uppercase",color:T.color,opacity:.65,marginBottom:2}}>Days spotting</p>
+                              <p style={{fontFamily:"'Raleway',sans-serif",fontSize:17,color:group.daysSpotting?T.textColor:T.mutedColor}}>
+                                {group.daysSpotting?`${group.daysSpotting} days`:"None logged"}
                               </p>
                             </div>
                             <div>
